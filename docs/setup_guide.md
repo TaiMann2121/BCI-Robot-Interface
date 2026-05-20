@@ -1,6 +1,6 @@
 # BCI Robot Interface — Setup Guide
 
-This guide covers everything needed to set up the BCI-controlled robotic arm and hand interface on a new Windows PC.
+This guide covers everything needed to set up the BCI-controlled robotic arm and hand interface on a Windows PC.
 
 ---
 
@@ -85,7 +85,7 @@ During installation, keep the default options — **CAN device drivers** and **P
 
 After installation, verify the driver installed correctly:
 - Open Device Manager (Start → search "Device Manager")
-- Look for the PCAN-USB adapter under "PEAK-System PCAN Adapters"
+- Look for the PCAN-USB adapter under "CAN-Hardware"
 
 ### 4. Visual Studio (Community Edition)
 
@@ -127,7 +127,7 @@ Click Apply then OK.
 
 ### Step 4 — Build
 
-Press `Ctrl + Shift + B` or go to **Build → Build Solution**.
+Go to **Build → Build Clean Solution → Build Solution**.
 
 The output should show:
 ```
@@ -269,7 +269,19 @@ static double speed_thumb = 0.12;   // thumb moves slightly faster
 #define MIN_PROB_THRESHOLD  0       // minimum probability to trigger movement
 ```
 
-The `initpos` array defines the hand's resting position. If the hand needs to be recalibrated, press H in the hand controller console to move to the BHand home position, then add a print statement to record `q_des` values and update `initpos` and `position` accordingly.
+The `initpos` array defines the hand's resting position. If the hand needs to be recalibrated, add the following print block to `MainLoop()` in `myAllegroHand.cpp` immediately after the home motion call, rebuild, and record the printed values to update `initpos` and `position` in `RockScissorsPaper.cpp`:
+
+```cpp
+if (pBHand) pBHand->SetMotionType(eMotionType_HOME);
+
+// Temporary calibration block — remove after recording values
+Sleep(3000);  // wait for hand to reach home position
+printf("Home position joint values:\n");
+for (int i = 0; i < 16; i++)
+{
+    printf("q[%d] = %.4f\n", i, q[i]);
+}
+```
 
 ---
 
@@ -285,7 +297,7 @@ Copy `libBHand.dll` from `hand\lib\BHand\` to `hand\Peak Debug\`.
 Make sure `kortex_env39` is activated and VS Code is using the `kortex_env39` interpreter. The Kortex API requires Python 3.9 — it will not work with Python 3.10 or later.
 
 **CAN channel fails to open**
-Check that the PCAN-USB adapter is connected and the driver is installed. Verify in Device Manager that the adapter appears under "PEAK-System PCAN Adapters" without errors.
+Check that the PCAN-USB adapter is connected and the driver is installed. Verify in Device Manager that the adapter appears under "CAN-Hardware" without errors.
 
 **Hand jitter when not moving**
 Increase `DEADZONE` in `arm_controller.py`. The default 2cm should prevent jitter but may need tuning based on your setup.

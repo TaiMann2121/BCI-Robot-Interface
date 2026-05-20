@@ -244,13 +244,6 @@ void MainLoop()
 	// Move hand to home position before entering main loop
 	if (pBHand) pBHand->SetMotionType(eMotionType_HOME);
 
-	// Wait for home motion to complete, then print joint positions
-	Sleep(3000);  // 3 seconds for hand to reach home
-	printf("Home position joint values:\n");
-	for (int i = 0; i < 16; i++)
-	{
-		printf("q_des[%d] = %.4f\n", i, q[i]);
-	}
 
 	char buf[BUFFER_SIZE];
 	char latestBuf[BUFFER_SIZE] = { 0 };

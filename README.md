@@ -1,6 +1,6 @@
 # BCI Robot Interface
 
-A brain-computer interface (BCI) controlled robotic arm and hand system developed in the He Lab. BCI2000 decodes neural signals and streams control outputs to a Kinova Gen3 robotic arm and an Allegro Hand V4, enabling real-time robotic control from brain activity.
+An integrated brain-computer interface (BCI) controlled robotic arm and hand system developed in the He Lab. BCI2000 decodes neural signals and streams control outputs to a Kinova Gen3 robotic arm and an Allegro Hand V4, enabling real-time robotic control from brain activity.
 
 ## System Overview
 
@@ -10,7 +10,7 @@ BCI2000 (Windows)
   └── UDP port 5005 → myAllegroHand.exe  → PCAN-USB   → Allegro Hand V4
 ```
 
-The arm controller moves the end effector in 2D space based on cursor position outputs from BCI2000. The hand controller curls individual fingers based on per-finger probability outputs from an EEGNet classifier running inside BCI2000.
+The arm controller moves the end effector in 2D space based on cursor position outputs from BCI2000. The hand controller curls individual fingers based on per-finger probability outputs from a classifier running inside BCI2000.
 
 ## Repository Structure
 
