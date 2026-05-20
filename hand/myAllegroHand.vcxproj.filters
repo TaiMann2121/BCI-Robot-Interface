@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Peak">
+      <UniqueIdentifier>{3068d922-3341-4914-b186-ad91eb5f0b88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\IXXAT">
+      <UniqueIdentifier>{4ef15424-2041-4cda-a40c-591c194116f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ESD">
+      <UniqueIdentifier>{dc3ffa26-d6dc-4afa-8ac2-39ac03ad9cc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Kvaser">
+      <UniqueIdentifier>{5c9e7776-b520-4fb2-9e95-68a5f493bd00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\NI">
+      <UniqueIdentifier>{02f14d72-a78e-4c41-bc5f-488aaf885ea7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Softing">
+      <UniqueIdentifier>{37b18832-e468-42cf-ba51-e1614d2aedc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Peak">
+      <UniqueIdentifier>{a405672e-0e78-4b24-9c19-a177f8430f5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\IXXAT">
+      <UniqueIdentifier>{17ed7087-59bf-4f16-ad60-b7a26587e8d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Softing">
+      <UniqueIdentifier>{e6a01922-4f67-41a1-831b-21d5b58dc145}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ESD">
+      <UniqueIdentifier>{c5278d43-4598-41ed-b783-bc64b5cdf7d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Kvaser">
+      <UniqueIdentifier>{8351dece-f0ac-4f4b-a93a-b4af4d83f966}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\NI">
+      <UniqueIdentifier>{a2ff2eac-6730-480d-87e5-475b6b5b8b12}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="myAllegroHand.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RockScissorsPaper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Peak\canAPI.cpp">
+      <Filter>Source Files\Peak</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IXXAT\canAPI.cpp">
+      <Filter>Source Files\IXXAT</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IXXAT\dialog.cpp">
+      <Filter>Source Files\IXXAT</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IXXAT\select.cpp">
+      <Filter>Source Files\IXXAT</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ESD-CAN\canAPI.cpp">
+      <Filter>Source Files\ESD</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Kvaser\canAPI.cpp">
+      <Filter>Source Files\Kvaser</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NI-CAN\canAPI.cpp">
+      <Filter>Source Files\NI</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Softing\canAPI.cpp">
+      <Filter>Source Files\Softing</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\IXXAT\cancon.rc">
+      <Filter>Source Files\IXXAT</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\IXXAT\cancon.rh">
+      <Filter>Source Files\IXXAT</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\IXXAT\dialog.hpp">
+      <Filter>Source Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IXXAT\select.hpp">
+      <Filter>Source Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\canAPI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\canDef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\rDeviceAllegroHandCANDef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RockScissorsPaper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Peak\PCANBasic.h">
+      <Filter>Header Files\Peak</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\CANtype.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\KLNtype.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\LINtype.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\vci3.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\vciCtrlType.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\vcierr.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\vciguid.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\vciIdType.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\vcinpl.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\vcitype.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\IXXAT\vciver.h">
+      <Filter>Header Files\IXXAT</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Softing\Can_def.h">
+      <Filter>Header Files\Softing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Softing\CANL2.H">
+      <Filter>Header Files\Softing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ESD-CAN\ntcan.h">
+      <Filter>Header Files\ESD</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Kvaser\canlib.h">
+      <Filter>Header Files\Kvaser</Filter>
+    </ClInclude>
+    <ClInclude Include="include\NI-CAN\Nican.h">
+      <Filter>Header Files\NI</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
