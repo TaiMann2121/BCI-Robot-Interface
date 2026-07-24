@@ -276,22 +276,36 @@ CurrentTrial  InnerTrialCount  ArmPred_X  FingerMovePhase  CopilotFingerPred  ta
 
 ### Arm controller (`arm/arm_controller.py`)
 ```python
-HOME_X  =  0.427   # meters — hand over the CENTER key; update if setup changes
-HOME_Y  = -0.447   # meters — horizontal axis, along the key row
-HOME_Z  =  0.156   # meters
+HOME_X  =  0.472   # meters — world X, ALONG the key row; hand over the CENTER key
+HOME_Y  = -0.516   # meters — depth (perpendicular to the key row)
+HOME_Z  =  0.131   # meters
 DEADZONE = 0.005   # meters — arm stops moving within this of target (~0.1 key)
+KP        = 3.0    # 1/s — proportional gain: velocity = KP * position_error
 MAX_SPEED = 0.4    # m/s — safety speed cap
-ARM_Y_SIGN = +1    # flip to -1 if the arm slides the wrong way along the keys
+ARM_Y_SIGN = -1    # flip if the arm slides the wrong way along the keys
 ```
 
 Calibration (derived from `Piano_Application_vel.py`, do not change unless the
 BCI2000 geometry changes): `105` px per key, key width `0.0508 m` (2 in), so
 `M_PER_PX = 0.0508 / 105`. `ArmPred_X` range ±420 px = ±4 keys = ±0.2032 m.
 
-To update the home position, jog the arm so the middle finger sits over the
-center key using the Kinova web app (`192.168.1.10`), record the end effector
-coordinates, and update `HOME_*`. Confirm `ARM_Y_SIGN` by sending `key 6` then
-`key 4` from the simulator and checking the arm moves the correct way.
+The arm tracks the key row along its **world X** axis (base frame); world Y is
+depth. The servo commands a base-frame X velocity proportional to the position
+error (`KP`), so it is independent of tool orientation.
+
+To update the home position:
+1. In the Kinova web app (`192.168.1.10`), jog the arm along X to find its
+   reachable min and max at the keyboard's depth/height, then home at the
+   **midpoint** so the ±4-key span (±0.2032 m) fits with margin. The arm has
+   poor reach toward its own base — if one side runs out of room, slide the
+   keyboard away from the base and re-center. (`arm_controller.py` will show a
+   persistent position error with velocity pinned at `MAX_SPEED` if a target is
+   beyond reach.)
+2. Jog so the middle finger sits over the center key, record the end effector
+   coordinates, and update `HOME_*` (values are in meters; the web app shows cm).
+3. Confirm `ARM_Y_SIGN` by sending `key 6` then `key 4` from the simulator:
+   higher key indices must track toward the hand's ring-finger side (the right
+   finger presses key index+1).
 
 ### Hand controller (`hand/RockScissorsPaper.cpp`)
 ```cpp

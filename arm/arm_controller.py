@@ -43,12 +43,12 @@ from kortex_api.autogen.messages import Base_pb2
 # (key index 5, ArmPred_X == 32767). Jog the arm here in the Kinova web app and
 # record the values if the physical setup changes.
 # -----------------------------------------------------------------------
-HOME_X       =  0.427   # meters
-HOME_Y       = -0.447   # meters  (horizontal axis, ALONG the key row)
-HOME_Z       =  0.156   # meters
-HOME_THETA_X =  88.149  # degrees
-HOME_THETA_Y =  -2.257  # degrees
-HOME_THETA_Z =   5.636  # degrees
+HOME_X       =  0.472   # meters  (world X, ALONG the key row)
+HOME_Y       = -0.516   # meters  (depth)
+HOME_Z       =  0.131   # meters
+HOME_THETA_X = 100.2    # degrees
+HOME_THETA_Y =  -2.8    # degrees
+HOME_THETA_Z =   4.4    # degrees
 
 # -----------------------------------------------------------------------
 # Piano / BCI coordinate decoding
@@ -59,11 +59,18 @@ KEY_WIDTH_M   = 0.0508         # physical key width: 2 inches
 M_PER_PX      = KEY_WIDTH_M / PX_PER_KEY   # ~4.838e-4 m per ArmPred_X unit
 ARM_PX_LIMIT  = 420            # |currentRoboX_px| max -> +/- 4 keys from center
 
+# The key row runs along the robot's world X axis (base frame). Confirmed on the
+# physical rig: base +Y points away from the keyboard (depth), base X runs along
+# the keys. The servo tracks tool_pose_x; see servo_toward().
+#
 # Which physical direction is +ArmPred_X (higher key index)?
-#   +1: increasing key index moves the arm in +Y (world).
-#   -1: flip if the arm slides the wrong way along the keyboard.
-# >>> CONFIRM against your rig by watching a small `arm key 6` vs `arm key 4`. <<<
-ARM_Y_SIGN    = +1
+#   +1: increasing key index moves the arm in +X (world).
+#   -1: increasing key index moves the arm in -X (world).
+# Set to -1: the right hand's ring finger (finger 2, which presses key
+# index+1) is on the hand's right, so higher key indices must track toward
+# the hand's right, which is -X on this rig.
+# >>> CONFIRM against your rig by watching a small `key 6` vs `key 4`. <<<
+ARM_Y_SIGN    = -1
 
 # -----------------------------------------------------------------------
 # Control parameters
@@ -71,6 +78,7 @@ ARM_Y_SIGN    = +1
 CONTROL_HZ  = 40             # internal servo rate (decoupled from the 8 Hz stream)
 LOOP_TIME   = 1.0 / CONTROL_HZ
 MAX_SPEED   = 0.4            # m/s — safety speed cap
+KP          = 3.0            # 1/s — proportional gain: velocity = KP * position_error
 DEADZONE    = 0.005          # meters — stop when within this of target (~0.1 key)
 TIMEOUT     = 20            # seconds — home-move timeout
 
@@ -150,19 +158,25 @@ def move_home(base):
 def servo_toward(base, base_cyclic, target_horz_m):
     """
     One 1-D velocity step: drive the horizontal axis toward the target offset.
-    The keyboard runs along the arm's Y axis; Z (height) stays at home.
+    The keyboard runs along the arm's world X axis; Y (depth) and Z (height)
+    stay at home.
     """
     feedback = base_cyclic.RefreshFeedback()
-    target_y = HOME_Y + ARM_Y_SIGN * target_horz_m
-    error_y  = target_y - feedback.base.tool_pose_y
+    target_x = HOME_X + ARM_Y_SIGN * target_horz_m
+    error_x  = target_x - feedback.base.tool_pose_x
 
-    vel = 0.0 if abs(error_y) < DEADZONE else error_y / LOOP_TIME
+    # Proportional velocity (vel = KP * error), not the old deadbeat
+    # error/LOOP_TIME, which commanded full speed until the deadzone and
+    # overshot into oscillation.
+    vel = 0.0 if abs(error_x) < DEADZONE else KP * error_x
     vel = float(np.clip(vel, -MAX_SPEED, MAX_SPEED))
 
+    # Command in the BASE frame along X (the key row), so the servo is
+    # independent of tool orientation and matches the error axis above.
     command = Base_pb2.TwistCommand()
-    command.reference_frame = Base_pb2.CARTESIAN_REFERENCE_FRAME_TOOL
+    command.reference_frame = Base_pb2.CARTESIAN_REFERENCE_FRAME_BASE
     command.duration = 0
-    command.twist.linear_x  = vel   # tool linear_x maps to world Y in this setup
+    command.twist.linear_x  = vel   # world X = along the key row
     command.twist.linear_y  = 0
     command.twist.linear_z  = 0
     command.twist.angular_x = 0
