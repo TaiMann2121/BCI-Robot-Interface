@@ -276,9 +276,9 @@ CurrentTrial  InnerTrialCount  ArmPred_X  FingerMovePhase  CopilotFingerPred  ta
 
 ### Arm controller (`arm/arm_controller.py`)
 ```python
-HOME_X  =  0.657   # meters — hand over the CENTER key; update if setup changes
-HOME_Y  =  0.001   # meters — horizontal axis, along the key row
-HOME_Z  =  0.417   # meters
+HOME_X  =  0.427   # meters — hand over the CENTER key; update if setup changes
+HOME_Y  = -0.447   # meters — horizontal axis, along the key row
+HOME_Z  =  0.156   # meters
 DEADZONE = 0.005   # meters — arm stops moving within this of target (~0.1 key)
 MAX_SPEED = 0.4    # m/s — safety speed cap
 ARM_Y_SIGN = +1    # flip to -1 if the arm slides the wrong way along the keys
