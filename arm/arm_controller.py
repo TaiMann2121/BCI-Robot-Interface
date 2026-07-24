@@ -43,12 +43,12 @@ from kortex_api.autogen.messages import Base_pb2
 # (key index 5, ArmPred_X == 32767). Jog the arm here in the Kinova web app and
 # record the values if the physical setup changes.
 # -----------------------------------------------------------------------
-HOME_X       =  0.657   # meters
-HOME_Y       =  0.001   # meters  (horizontal axis, ALONG the key row)
-HOME_Z       =  0.417   # meters
-HOME_THETA_X =  90      # degrees
-HOME_THETA_Y =   0      # degrees
-HOME_THETA_Z =  90      # degrees
+HOME_X       =  0.427   # meters
+HOME_Y       = -0.447   # meters  (horizontal axis, ALONG the key row)
+HOME_Z       =  0.156   # meters
+HOME_THETA_X =  88.149  # degrees
+HOME_THETA_Y =  -2.257  # degrees
+HOME_THETA_Z =   5.636  # degrees
 
 # -----------------------------------------------------------------------
 # Piano / BCI coordinate decoding
