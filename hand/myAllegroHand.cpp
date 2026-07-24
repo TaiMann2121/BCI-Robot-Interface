@@ -203,22 +203,29 @@ static unsigned int __stdcall ioThreadProc(void* inst)
 }
 
 // -----------------------------------------------------------------------
-// NEW MainLoop — replaces the keyboard-driven version
+// MainLoop — piano task (single combined BCI2000 stream via the dispatcher)
 // -----------------------------------------------------------------------
-// Listens for BCI2000 finger data on UDP port 5005.
-// Packet format (tab-separated):
-//   CurrentTrial  FeedbackApp  prob_thumb  prob_index  prob_middle  prob_pinky
+// The piano task streams everything on one BCI2000 port (5005). The Python
+// dispatcher (dispatcher/bci2000_dispatcher.py) owns 5005 and forwards the
+// cleaned 8-field record to this controller on port 5007:
 //
-// FeedbackApp: 1 = finger movement enabled, 0 = disabled
-// prob_*:      smoothed probability values (0-100 integer) for each finger
+//   CurrentTrial  InnerTrialCount  ArmPred_X  FingerMovePhase
+//   CopilotFingerPred  targetKeyIndex  pressedKeyIndex  ArmCurrentIndex
 //
-// The finger with the highest probability above MIN_PROB_THRESHOLD is moved.
+// This controller only uses two fields:
+//   FingerMovePhase   : 1 during the brief FingerHold phase, else 0. It is an
+//                       EDGE-TRIGGERED pulse — press on the 0 -> 1 transition,
+//                       NOT while it is held (it is only true for ~100 ms).
+//   CopilotFingerPred : 0/1/2 = left/center/right finger to press.
+//
+// Arm positioning is handled by arm_controller.py, so the pressed key is
+// implied by where the arm is; this controller just taps the selected finger.
 // -----------------------------------------------------------------------
 
 // Constants — adjust these as needed
-#define UDP_PORT        5005
+#define UDP_PORT        5007     // forwarded from the dispatcher (BCI2000 -> 5005 -> here)
 #define BUFFER_SIZE     512
-#define MIN_PROB_THRESHOLD  0    // minimum probability to trigger finger movement
+#define PRESS_HOLD_MS   400      // how long to hold a key press before lifting
 
 void MainLoop()
 {
@@ -238,17 +245,17 @@ void MainLoop()
 	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	bind(sock, (sockaddr*)&addr, sizeof(addr));
 
-	printf("Listening for BCI2000 finger data on UDP port %d...\n", UDP_PORT);
+	printf("Listening for piano finger data on UDP port %d (via dispatcher)...\n", UDP_PORT);
 	printf("Press Q to quit.\n\n");
 
-	// Move hand to home position before entering main loop
-	if (pBHand) pBHand->SetMotionType(eMotionType_HOME);
-
+	// Move hand to its resting pose (fingers hovering over the keys)
+	MotionReset();
 
 	char buf[BUFFER_SIZE];
 	char latestBuf[BUFFER_SIZE] = { 0 };
 	bool hasPacket = false;
 	bool bRun = true;
+	int prevFingerMovePhase = 0;   // for rising-edge detection
 
 	while (bRun)
 	{
@@ -282,57 +289,30 @@ void MainLoop()
 			continue;
 		}
 
-		// ---- Parse the packet ----
-		// Format: CurrentTrial\tFeedbackApp\tprob_thumb\tprob_index\tprob_middle\tprob_pinky
-		int trial, feedbackApp;
-		int prob[4];   // thumb=0, index=1, middle=2, pinky=3
+		// ---- Parse the packet (8 tab-separated integers) ----
+		int currentTrial, innerTrialCount, armPredX, fingerMovePhase;
+		int copilotFingerPred, targetKeyIndex, pressedKeyIndex, armCurrentIndex;
 
-		int parsed = sscanf_s(latestBuf, "%d\t%d\t%d\t%d\t%d\t%d",
-			&trial,
-			&feedbackApp,
-			&prob[0],   // thumb
-			&prob[1],   // index
-			&prob[2],   // middle
-			&prob[3]);  // pinky
+		int parsed = sscanf_s(latestBuf, "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
+			&currentTrial, &innerTrialCount, &armPredX, &fingerMovePhase,
+			&copilotFingerPred, &targetKeyIndex, &pressedKeyIndex, &armCurrentIndex);
 
-		if (parsed != 6)
+		if (parsed != 8)
 		{
 			printf("Bad packet, skipping: %s\n", latestBuf);
 			continue;
 		}
 
-		// No feedback and no probabilities — reset to initial position
-		if (!feedbackApp && prob[0] == 0 && prob[1] == 0 && prob[2] == 0 && prob[3] == 0)
+		// ---- Edge-triggered press: fire on FingerMovePhase 0 -> 1 ----
+		if (fingerMovePhase && !prevFingerMovePhase)
 		{
-			MotionReset();
-			continue;
+			printf("Press: finger %d (arm key %d, target %d)\n",
+				copilotFingerPred, armCurrentIndex, targetKeyIndex);
+			PressFinger(copilotFingerPred);   // flex the selected finger down
+			Sleep(PRESS_HOLD_MS);             // hold the press briefly
+			MotionReset();                    // lift back to the resting pose
 		}
-
-		// Feedback not active but probs present — pre-feedback period, stay still
-		if (!feedbackApp)
-		{
-			continue;
-		}
-
-		// Find the finger with the highest probability
-		int maxIdx = 0;
-		int maxVal = prob[0];
-		for (int i = 1; i < 4; i++)
-		{
-			if (prob[i] > maxVal)
-			{
-				maxVal = prob[i];
-				maxIdx = i;
-			}
-		}
-
-		// Only move if probability is above threshold
-		if (maxVal > MIN_PROB_THRESHOLD)
-		{
-			MoveFinger(maxIdx, maxVal);
-			if (pBHand) pBHand->SetMotionType(eMotionType_JOINT_PD);
-		}
-
+		prevFingerMovePhase = fingerMovePhase;
 	}
 
 	// ---- Cleanup ----

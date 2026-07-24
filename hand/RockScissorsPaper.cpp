@@ -30,8 +30,7 @@ static double scissors[] = {
 //		0, 0, 0, 0,
 //	0, 0, 0, 0,
 //	0.40, 1.25, -0.27, -0.24 };
-// current position of the hand, which is updated in MoveFinger() function. This is used to move fingers incrementally.
-
+// current commanded pose of the hand, updated by PressFinger()/MotionReset().
 static double position[] = {
 	0.0169, -0.1330, 0.8200, 0.2134,
 	-0.0140, -0.1228, 0.8172, 0.7974,
@@ -39,6 +38,9 @@ static double position[] = {
 	0.8510, 0.4430, 0.1285, 0.7840
 };
 
+// resting pose: fingers hovering over the keys. MotionReset() returns here, and
+// PressFinger() presses relative to it. Recalibrate per the setup guide if the
+// hand's mounting changes.
 static double initpos[] = {
 	0.0169, -0.1330, 0.8200, 0.2134,
 	-0.0140, -0.1228, 0.8172, 0.7974,
@@ -46,10 +48,28 @@ static double initpos[] = {
 	0.8510, 0.4430, 0.1285, 0.7840
 };
 
-// speed of finger movement. This value can be adjusted to make the fingers move faster or slower. The value is added to the current position of the finger in MoveFinger() function.
-static double speed = 0.1;
-// The thumb is moved slower than the other fingers to make the movement more natural. This value can also be adjusted as needed.
-static double speed_thumb = 0.12;
+// -----------------------------------------------------------------------
+// Piano finger mapping
+// -----------------------------------------------------------------------
+// CopilotFingerPred (0/1/2 = left/center/right key) selects which of the three
+// adjacent piano-playing fingers presses. Each entry is the {firstJoint, lastJoint}
+// range (inclusive) of the Allegro finger that flexes to press.
+//
+// Allegro joint blocks:  index=0..3, middle=4..7, ring/pinky=8..11, thumb=12..15.
+// The middle finger sits over the arm's current key, so:
+//   0 (left)  -> index finger   (joints 1..3)
+//   1 (center)-> middle finger  (joints 5..7)
+//   2 (right) -> ring/pinky     (joints 9..11)
+// >>> CONFIRM this matches how the hand is physically mounted over the keys. <<<
+static const int fingerJoints[3][2] = {
+	{ 1, 3 },   // 0 = left   -> index
+	{ 5, 7 },   // 1 = center -> middle
+	{ 9, 11 },  // 2 = right  -> ring/pinky
+};
+
+// How far (radians) to flex the finger's joints when pressing a key. Tune on the
+// physical rig so the fingertip travels enough to depress the key without jamming.
+static double press_flexion = 0.35;
 // BHand library instance and desired joint positions. These are used in the motion functions to set the desired joint positions and apply the changes using BHand library.
 extern BHand* pBHand;
 extern double q_des[MAX_DOF];
@@ -97,60 +117,27 @@ void MotionPaper()
 	SetGainsRSP();
 }
 
-void MoveFinger(int max_idx, int max_val)
+// Press one piano key with the selected finger. fingerSel is CopilotFingerPred
+// (0=left, 1=center, 2=right). Sets an absolute pressed pose: the resting pose
+// with the chosen finger's flexion joints bent down by press_flexion. Call
+// MotionReset() afterwards to lift the finger back to rest.
+void PressFinger(int fingerSel)
 {
-	int joint2Idx;
-	int joint4Idx;
+	if (fingerSel < 0 || fingerSel > 2) return;
 
-
-	if (max_idx == 0 && max_val > 0) {  // Thumb
-		joint2Idx = 14;
-		joint4Idx = 15;
-		for (int i = 0; i < 16; i++) {
-			q_des[i] = position[i];
-			if ((i >= joint2Idx) && i <= joint4Idx) {
-				position[i] += speed_thumb;
-			}
+	int j0 = fingerJoints[fingerSel][0];
+	int j1 = fingerJoints[fingerSel][1];
+	for (int i = 0; i < 16; i++) {
+		q_des[i] = initpos[i];
+		if (i >= j0 && i <= j1) {
+			q_des[i] = initpos[i] + press_flexion;
 		}
 	}
-	else if (max_idx == 1 && max_val > 0) {  // Index
-		joint2Idx = 1;
-		joint4Idx = 3;
-		for (int i = 0; i < 16; i++) {
-			q_des[i] = position[i];
-			if ((i >= joint2Idx) && i <= joint4Idx) {
-				position[i] += speed;
-			}
-		}
-
-	}
-	else if (max_idx == 2 && max_val > 0) {   // Middle
-		joint2Idx = 5;
-		joint4Idx = 7;
-		for (int i = 0; i < 16; i++) {
-			q_des[i] = position[i];
-			if ((i >= joint2Idx) && i <= joint4Idx) {
-				position[i] += speed;
-			}
-		}
-
-	}
-	else if (max_idx == 3 && max_val > 0) {    // Pinky
-		joint2Idx = 9;
-		joint4Idx = 11;
-		for (int i = 0; i < 16; i++) {
-			q_des[i] = position[i];
-			if ((i >= joint2Idx) && i <= joint4Idx) {
-				position[i] += speed;
-			}
-		}
-
-	}
-	else return;
+	for (int i = 0; i < 16; i++)
+		position[i] = q_des[i];
 
 	if (pBHand) pBHand->SetMotionType(eMotionType_JOINT_PD);
 	SetGainsRSP();
-	//usleep(10000);
 }
 
 // This function resets the hand to the initial position defined in 'initpos' array. This can be called when the user wants to reset the hand to the initial position.

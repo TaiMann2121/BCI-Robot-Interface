@@ -6,17 +6,22 @@ This guide covers everything needed to set up the BCI-controlled robotic arm and
 
 ## System Overview
 
-The interface connects a Kinova Gen3 robotic arm and an Allegro Hand V4 to a BCI2000 brain-computer interface system. BCI2000 sends control signals over UDP, which are received by two separate controller programs running simultaneously on the same Windows PC.
+The interface connects a Kinova Gen3 robotic arm and an Allegro Hand V4 to a BCI2000 brain-computer interface system running the piano typing task.
+
+For the piano task, BCI2000 streams **all** control data as a single combined
+record on **one** UDP port (5005) at **8 Hz**. Because two processes cannot
+reliably share a UDP port, a dispatcher owns 5005 and forwards the record to the
+two controllers on separate local ports:
 
 ```
 BCI2000 (Windows)
-  ├── UDP port 5006 → arm_controller.py   → Kortex API (Ethernet) → Kinova Gen3 Arm
-  └── UDP port 5005 → myAllegroHand.exe   → PCAN-USB (CAN bus)   → Allegro Hand V4
+  └── UDP 5005 → bci2000_dispatcher.py ┬── UDP 5006 → arm_controller.py → Kortex API (Ethernet) → Kinova Gen3 Arm
+                                        └── UDP 5007 → myAllegroHand.exe → PCAN-USB (CAN bus)     → Allegro Hand V4
 ```
 
-**BCI2000 update rates (confirmed from parameter files):**
-- Arm data: 25 Hz (SamplingRate=1000Hz, SampleBlockSize=40)
-- Hand data: 8 Hz (SamplingRate=1024Hz, SampleBlockSize=128)
+**Stream (confirmed from `SigGen_Piano_vel.bat` and `Piano_Application_vel.py`):**
+- Single port 5005, single tab-separated record, 8 Hz (SamplingRate=1024Hz, SampleBlockSize=128).
+- The arm is **1-D** (horizontal slide along the keys). The fingers handle key presses; the arm does not move vertically.
 
 ---
 
@@ -150,7 +155,7 @@ copy "hand\lib\BHand\libBHand.dll" "hand\Peak Debug\"
 
 ## Running the Interface
 
-Run each component in a separate terminal window. All terminals running Python scripts must have `kortex_env39` activated.
+Run each component in a separate terminal window. All terminals running Python scripts must have `kortex_env39` activated. **Start the dispatcher first** — it owns port 5005, and the controllers listen on the ports it forwards to.
 
 ### Step 1 — Connect hardware
 
@@ -160,7 +165,15 @@ Run each component in a separate terminal window. All terminals running Python s
 4. Connect the CAN cable from the PCAN-USB adapter to the Allegro Hand
 5. Power on the Allegro Hand
 
-### Step 2 — Start the hand controller
+### Step 2 — Start the dispatcher
+
+In a terminal (a plain Python is fine — the dispatcher has no Kortex dependency):
+```
+python dispatcher\bci2000_dispatcher.py
+```
+It should print that it is listening on `127.0.0.1:5005` and forwarding to 5006 (arm) and 5007 (hand).
+
+### Step 3 — Start the hand controller
 
 Run `myAllegroHand.exe` from Visual Studio by pressing **F5**, or directly from the command line:
 ```
@@ -169,12 +182,12 @@ Run `myAllegroHand.exe` from Visual Studio by pressing **F5**, or directly from 
 
 The console should show the CAN channel opening, hardware info, and then:
 ```
-Listening for BCI2000 finger data on UDP port 5005...
+Listening for piano finger data on UDP port 5007 (via dispatcher)...
 ```
 
-The hand will move to its home position on startup.
+The hand will move to its resting pose on startup.
 
-### Step 3 — Start the arm controller
+### Step 4 — Start the arm controller
 
 In a new terminal with `kortex_env39` activated:
 ```
@@ -183,13 +196,11 @@ kortex_env39\Scripts\activate
 python arm_controller.py --ip 192.168.1.10
 ```
 
-The arm will move to its home position, then wait for BCI2000 data.
+The arm will move to its home position (hand over the center key), then track `ArmPred_X`.
 
-### Step 4 — Run BCI2000 or the simulator
+### Step 5 — Run BCI2000 or the simulator
 
-For real BCI2000 experiments, use the batch files in `BCI2000\batch\`:
-- `SigGen_BCI2000_arm.bat` — arm control paradigm
-- `SigGen_BCI2000_finger.bat` — finger control paradigm
+For real experiments, launch BCI2000 with `BCI2000 Piano\SigGen_Piano_vel.bat`.
 
 For testing without BCI2000, use the simulator (see next section).
 
@@ -197,7 +208,7 @@ For testing without BCI2000, use the simulator (see next section).
 
 ## Using the Simulator
 
-The simulator replicates BCI2000 UDP output for testing without a real BCI2000 session. Run it in a third terminal with `kortex_env39` activated:
+The simulator replicates the real piano stream (single port 5005, 8 Hz, BCI2000 watch-packet framing) for testing without a real BCI2000 session. It talks to the **dispatcher**, so start the dispatcher (and, optionally, the controllers) first. Run it in its own terminal:
 
 ```
 cd simulator
@@ -208,44 +219,56 @@ python bci_arm_hand_simulator.py
 
 | Command | Description |
 |---|---|
-| `demo sequence` | Runs a preset 4-trial block mimicking a real experiment |
-| `demo random <n>` | Runs n randomized trials |
-| `demo trial <x> <y> <finger>` | One trial: arm moves to (x,y)m while finger ramps |
-| `arm square <size>` | Arm traces a square, e.g. `arm square 0.1` |
-| `arm circle <radius>` | Arm traces a circle, e.g. `arm circle 0.08` |
-| `hand trial <finger>` | Full 5s hand trial: pre-feedback → ramp → reset |
-| `hand sequence index middle thumb pinky` | Series of hand trials |
-| `move <x> <y> <finger>` | Move arm and curl one finger simultaneously |
-| `home` | Return arm and hand to home position |
-| `stop` | Disable all movement |
-| `status` | Show current state |
+| `trial <key> <finger>` | Full trial: slide arm to key window (1–9), then press finger (0–2) |
+| `demo [n]` | Run n random trials (default 4) |
+| `key <index>` | Slide the arm so the middle finger is over key index 1–9 |
+| `armx <px>` | Set raw arm position directly, −420..420 px (0 = center key 5) |
+| `press <0\|1\|2>` | Fire a single finger press (0=left, 1=center, 2=right) |
+| `home` | Recenter the arm over the center key, lift the finger |
+| `status` | Show current stream state |
 
-**Recommended first test:** `demo sequence` with both controllers running — this is the closest simulation of a real BCI2000 experiment.
+**Recommended first test:** `demo 4` with the dispatcher (and both controllers) running — this is the closest simulation of a real piano session.
 
-**Safe arm movement ranges:** Keep x and y offsets under 0.1m when testing. Start with small values like `arm square 0.05`.
+**Finger vs. key:** `CopilotFingerPred` 0/1/2 presses the key to the left of / under / right of the arm's middle finger, so the pressed key = `ArmCurrentIndex + finger − 1`.
 
 ---
 
 ## Packet Formats
 
-### Arm (UDP port 5006, 25 Hz)
-```
-trial   Arm_X   Arm_Y   ArmMove
-```
-- `Arm_X`, `Arm_Y`: uint16, center offset = 32767, scale = 1050
-- `ArmMove`: 1 = movement enabled, 0 = stopped
+### Piano stream (BCI2000 → UDP port 5005, 8 Hz)
 
-### Hand (UDP port 5005, 8 Hz)
+BCI2000's `ADD WATCH` sends one tab-separated record per packet, framed with a
+leading frame counter and a trailing tab + CRLF:
 ```
-CurrentTrial   FeedbackApp   prob_thumb   prob_index   prob_middle   prob_pinky
+<counter>  CurrentTrial  InnerTrialCount  ArmPred_X  FingerMovePhase  CopilotFingerPred  targetKeyIndex  pressedKeyIndex  ArmCurrentIndex  <CRLF>
 ```
-- `FeedbackApp`: 1 = feedback period active, 0 = pre-feedback or inter-trial
-- `prob_*`: smoothed finger probabilities (0–100 integer)
 
-**Hand behavior:**
-- `FeedbackApp=1`, max prob > threshold → `MoveFinger()` called for highest probability finger
-- `FeedbackApp=0`, all probs = 0 → `MotionReset()` called, hand returns to home
-- `FeedbackApp=0`, probs present (25 each) → pre-feedback period, hand stays still
+| Field | Range | Meaning |
+|---|---|---|
+| `CurrentTrial` | 1–5 | block number |
+| `InnerTrialCount` | 0+ | step within the block |
+| `ArmPred_X` | 32347–33187 | arm horizontal position, = px + 32767 offset (px ∈ [−420, 420]) |
+| `FingerMovePhase` | 0/1 | **edge-triggered** press pulse — press on the 0→1 transition |
+| `CopilotFingerPred` | 0/1/2 | finger to press: left / center / right |
+| `targetKeyIndex` | 2–8 | intended note key (C–B) |
+| `pressedKeyIndex` | 0–10 | key actually pressed (= `ArmCurrentIndex + CopilotFingerPred − 1`) |
+| `ArmCurrentIndex` | 1–9 | key the middle finger is currently over |
+
+### Forwarded record (dispatcher → arm 5006 / hand 5007)
+
+The dispatcher drops the leading counter and trailing junk (it splits on tabs,
+discards empty tokens, and keeps the last 8 fields — robust to the counter's
+digit count) and re-sends the same 8 fields, tab-separated, to both controllers:
+```
+CurrentTrial  InnerTrialCount  ArmPred_X  FingerMovePhase  CopilotFingerPred  targetKeyIndex  pressedKeyIndex  ArmCurrentIndex
+```
+- **Arm controller** uses `ArmPred_X` only.
+- **Hand controller** uses `FingerMovePhase` (rising edge) and `CopilotFingerPred`.
+
+> **Note on the press pulse:** `FingerMovePhase` is true only during the
+> `FingerHold` phase (`ResultHoldTime`, ~100 ms in the loaded `.prm`). At 8 Hz
+> (~125 ms/packet) that is captured in one packet, occasionally zero. If presses
+> are ever missed on the real system, raise `ResultHoldTime` in the parameters.
 
 ---
 
@@ -253,30 +276,45 @@ CurrentTrial   FeedbackApp   prob_thumb   prob_index   prob_middle   prob_pinky
 
 ### Arm controller (`arm/arm_controller.py`)
 ```python
-HOME_X  =  0.657   # meters — update if physical setup changes
-HOME_Y  =  0.001   # meters
+HOME_X  =  0.657   # meters — hand over the CENTER key; update if setup changes
+HOME_Y  =  0.001   # meters — horizontal axis, along the key row
 HOME_Z  =  0.417   # meters
-DEADZONE = 0.02    # meters — arm stops moving within this distance of target
+DEADZONE = 0.005   # meters — arm stops moving within this of target (~0.1 key)
 MAX_SPEED = 0.4    # m/s — safety speed cap
+ARM_Y_SIGN = +1    # flip to -1 if the arm slides the wrong way along the keys
 ```
 
-To update the home position, jog the arm to the desired position using the Kinova web app (`192.168.1.10`), record the end effector coordinates, and update the constants above.
+Calibration (derived from `Piano_Application_vel.py`, do not change unless the
+BCI2000 geometry changes): `105` px per key, key width `0.0508 m` (2 in), so
+`M_PER_PX = 0.0508 / 105`. `ArmPred_X` range ±420 px = ±4 keys = ±0.2032 m.
+
+To update the home position, jog the arm so the middle finger sits over the
+center key using the Kinova web app (`192.168.1.10`), record the end effector
+coordinates, and update `HOME_*`. Confirm `ARM_Y_SIGN` by sending `key 6` then
+`key 4` from the simulator and checking the arm moves the correct way.
 
 ### Hand controller (`hand/RockScissorsPaper.cpp`)
 ```cpp
-static double speed       = 0.1;    // finger flexion speed (radians per call)
-static double speed_thumb = 0.12;   // thumb moves slightly faster
-#define MIN_PROB_THRESHOLD  0       // minimum probability to trigger movement
+// CopilotFingerPred 0/1/2 -> which Allegro finger flexes (joint ranges).
+static const int fingerJoints[3][2] = { {1,3}, {5,7}, {9,11} }; // index / middle / ring
+static double press_flexion = 0.35;   // radians of flexion when pressing a key
 ```
+```cpp
+// hand/myAllegroHand.cpp
+#define PRESS_HOLD_MS   400           // how long to hold a press before lifting
+```
+Confirm `fingerJoints` matches how the three playing fingers are physically
+mounted over the keys, and tune `press_flexion` / `PRESS_HOLD_MS` so a press
+depresses the key cleanly without jamming.
 
-The `initpos` array defines the hand's resting position. If the hand needs to be recalibrated, add the following print block to `MainLoop()` in `myAllegroHand.cpp` immediately after the home motion call, rebuild, and record the printed values to update `initpos` and `position` in `RockScissorsPaper.cpp`:
+The `initpos` array defines the hand's resting position (fingers hovering over the keys). If the hand needs to be recalibrated, add the following print block to `MainLoop()` in `myAllegroHand.cpp` immediately after the `MotionReset()` call, rebuild, and record the printed values to update `initpos` and `position` in `RockScissorsPaper.cpp`:
 
 ```cpp
-if (pBHand) pBHand->SetMotionType(eMotionType_HOME);
+MotionReset();
 
 // Temporary calibration block — remove after recording values
-Sleep(3000);  // wait for hand to reach home position
-printf("Home position joint values:\n");
+Sleep(3000);  // wait for hand to reach its resting pose
+printf("Resting pose joint values:\n");
 for (int i = 0; i < 16; i++)
 {
     printf("q[%d] = %.4f\n", i, q[i]);
@@ -312,16 +350,22 @@ Make sure `#include <winsock2.h>` appears before `#include "windows.h"` — reve
 ```
 BCI_RobotInterface/
 ├── arm/
-│   ├── arm_controller.py          Main arm control script
+│   ├── arm_controller.py          Arm control (1-D key tracking, port 5006)
 │   ├── utilities.py               Kinova connection helper (unmodified)
 │   └── kortex_api-2.6.0.post3-py3-none-any.whl   Kortex API installer
 ├── hand/
-│   ├── myAllegroHand.cpp          Main hand control program (modified MainLoop)
-│   ├── RockScissorsPaper.cpp      Finger motion functions (modified)
-│   ├── RockScissorsPaper.h        Header (modified)
+│   ├── myAllegroHand.cpp          Hand control (edge-triggered press, port 5007)
+│   ├── RockScissorsPaper.cpp      Finger press / reset functions
+│   ├── RockScissorsPaper.h        Header
 │   └── ...                        Remaining project files (unmodified)
+├── dispatcher/
+│   └── bci2000_dispatcher.py      Owns port 5005, fans out to arm + hand
 ├── simulator/
-│   └── bci_arm_hand_simulator.py  BCI2000 simulator for testing
+│   └── bci_arm_hand_simulator.py  Piano-stream simulator for testing
+├── BCI2000 Piano/                 Piano-task BCI2000 reference files
+│   ├── SigGen_Piano_vel.bat       Launches the piano task
+│   ├── BioSemi_Piano.prm          Piano parameters
+│   └── Piano_Application_vel.py    App module (authoritative field definitions)
 └── docs/
     └── setup_guide.md             This document
 ```

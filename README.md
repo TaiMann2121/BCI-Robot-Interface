@@ -4,13 +4,21 @@ An integrated brain-computer interface (BCI) controlled robotic arm and hand sys
 
 ## System Overview
 
+The piano task streams all control data as a single combined record on one
+BCI2000 UDP port (5005) at 8 Hz. A dispatcher owns that port and fans the record
+out to the two controllers:
+
 ```
 BCI2000 (Windows)
-  ├── UDP port 5006 → arm_controller.py  → Kortex API → Kinova Gen3 Arm
-  └── UDP port 5005 → myAllegroHand.exe  → PCAN-USB   → Allegro Hand V4
+  └── UDP 5005 → bci2000_dispatcher.py ┬── UDP 5006 → arm_controller.py → Kortex API → Kinova Gen3 Arm
+                                        └── UDP 5007 → myAllegroHand.exe → PCAN-USB   → Allegro Hand V4
 ```
 
-The arm controller moves the end effector in 2D space based on cursor position outputs from BCI2000. The hand controller curls individual fingers based on per-finger probability outputs from a classifier running inside BCI2000.
+The keyboard is a 1-D layout of 11 keys (the middle 7 are notes C–B). The arm
+slides horizontally along the keys to track `ArmPred_X`; the hand taps one of
+three fingers (`CopilotFingerPred` = left/center/right) when `FingerMovePhase`
+pulses. See [docs/setup_guide.md](docs/setup_guide.md) for the packet format and
+calibration.
 
 ## Repository Structure
 
@@ -18,7 +26,9 @@ The arm controller moves the end effector in 2D space based on cursor position o
 BCI_RobotInterface/
 ├── arm/                    Kinova Gen3 arm controller (Python)
 ├── hand/                   Allegro Hand V4 controller (C++ Visual Studio project)
-├── simulator/              BCI2000 simulator for testing without a real experiment
+├── dispatcher/            Single-port stream splitter (Python)
+├── simulator/              Piano-stream simulator for testing without BCI2000
+├── BCI2000 Piano/         Piano-task BCI2000 files (bat, prm, app module) for reference
 └── docs/
     └── setup_guide.md      Full installation and configuration guide
 ```
@@ -27,11 +37,12 @@ BCI_RobotInterface/
 
 See [docs/setup_guide.md](docs/setup_guide.md) for complete setup instructions including hardware requirements, network configuration, software installation, and build steps.
 
-For testing without BCI2000, the simulator in `simulator/bci_arm_hand_simulator.py` replicates the BCI2000 data stream and supports individual arm/hand commands as well as full combined demo sequences.
+For testing without BCI2000, run `dispatcher/bci2000_dispatcher.py` alongside
+`simulator/bci_arm_hand_simulator.py` — the simulator replicates the real piano
+stream (single port, 8 Hz, BCI2000 watch-packet framing) and lets you drive arm
+positions and finger presses interactively.
 
-For real BCI2000 experiments, use the batch files in `BCI2000/batch/`:
-- `SigGen_BCI2000_arm.bat` — arm control paradigm
-- `SigGen_BCI2000_finger.bat` — finger control paradigm
+For real experiments, launch BCI2000 with `BCI2000 Piano/SigGen_Piano_vel.bat`.
 
 ## Hardware
 

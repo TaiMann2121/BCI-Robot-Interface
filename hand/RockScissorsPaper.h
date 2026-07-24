@@ -3,6 +3,6 @@
 void MotionRock();
 void MotionScissors();
 void MotionPaper();
-void MoveFinger(int max_idx, int max_val);
+void PressFinger(int fingerSel);
 void MotionReset();
 
