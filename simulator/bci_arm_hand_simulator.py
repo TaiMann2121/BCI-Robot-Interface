@@ -49,7 +49,7 @@ MAX_NOTE_KEY  = 8
 # Trial timing (seconds), loosely matching the paradigm (MoveTime/PressTime = 2 s)
 MOVE_TIME     = 2.0
 HOLD_TIME     = 0.5
-PRESS_PULSE   = 0.125       # FingerMovePhase held true ~1 packet (rising edge)
+PRESS_PULSE   = 0.375       # FingerMovePhase held true ~3 packets so the rising edge is never missed at 8 Hz
 INTERTRIAL    = 1.0
 
 # -----------------------------------------------------------------------

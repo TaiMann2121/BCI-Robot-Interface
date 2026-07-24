@@ -32,9 +32,9 @@ static double scissors[] = {
 //	0.40, 1.25, -0.27, -0.24 };
 // current commanded pose of the hand, updated by PressFinger()/MotionReset().
 static double position[] = {
-	0.0169, -0.1330, 0.8200, 0.2134,
-	-0.0140, -0.1228, 0.8172, 0.7974,
-	0.0414, -0.0535, 0.9128, 0.0000,
+	0.0000, 0.0000, 0.9000, 0.2134,
+	0.0000, 0.0000, 0.9000, 0.2134,
+	0.0000, 0.0000, 0.9000, 0.2134,
 	0.8510, 0.4430, 0.1285, 0.7840
 };
 
@@ -42,9 +42,9 @@ static double position[] = {
 // PressFinger() presses relative to it. Recalibrate per the setup guide if the
 // hand's mounting changes.
 static double initpos[] = {
-	0.0169, -0.1330, 0.8200, 0.2134,
-	-0.0140, -0.1228, 0.8172, 0.7974,
-	0.0414, -0.0535, 0.9128, 0.0000,
+	0.0000, 0.0000, 0.9000, 0.2134,
+	0.0000, 0.0000, 0.9000, 0.2134,
+	0.0000, 0.0000, 0.9000, 0.2134,
 	0.8510, 0.4430, 0.1285, 0.7840
 };
 
@@ -67,9 +67,12 @@ static const int fingerJoints[3][2] = {
 	{ 9, 11 },  // 2 = right  -> ring/pinky
 };
 
-// How far (radians) to flex the finger's joints when pressing a key. Tune on the
-// physical rig so the fingertip travels enough to depress the key without jamming.
-static double press_flexion = 0.35;
+// Radians the proximal (MCP) knuckle joint rotates to press a key. Every other
+// finger joint is held at its resting posture (initpos), which is set so the
+// fingertips already point straight down at the keys; the press is therefore a
+// pure proximal-joint rotation that drives the rigid fingertip down. Tune on the
+// physical rig so the fingertip depresses the key without jamming.
+static double press_flexion = 0.80;
 // BHand library instance and desired joint positions. These are used in the motion functions to set the desired joint positions and apply the changes using BHand library.
 extern BHand* pBHand;
 extern double q_des[MAX_DOF];
@@ -125,14 +128,16 @@ void PressFinger(int fingerSel)
 {
 	if (fingerSel < 0 || fingerSel > 2) return;
 
-	int j0 = fingerJoints[fingerSel][0];
-	int j1 = fingerJoints[fingerSel][1];
-	for (int i = 0; i < 16; i++) {
+	int j0 = fingerJoints[fingerSel][0];   // proximal (MCP) knuckle joint
+
+	// Hold every joint at the resting posture (fingertips pointing straight
+	// down, set in initpos) and press by rotating ONLY the proximal knuckle
+	// joint, so the rigid down-pointing fingertip drives straight into the key.
+	for (int i = 0; i < 16; i++)
 		q_des[i] = initpos[i];
-		if (i >= j0 && i <= j1) {
-			q_des[i] = initpos[i] + press_flexion;
-		}
-	}
+	q_des[j0] = initpos[j0] + press_flexion;
+	q_des[j0+1] = initpos[j0+1] - press_flexion;
+
 	for (int i = 0; i < 16; i++)
 		position[i] = q_des[i];
 

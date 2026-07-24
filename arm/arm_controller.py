@@ -45,7 +45,7 @@ from kortex_api.autogen.messages import Base_pb2
 # -----------------------------------------------------------------------
 HOME_X       =  0.472   # meters  (world X, ALONG the key row)
 HOME_Y       = -0.516   # meters  (depth)
-HOME_Z       =  0.131   # meters
+HOME_Z       =  0.115   # meters
 HOME_THETA_X = 100.2    # degrees
 HOME_THETA_Y =  -2.8    # degrees
 HOME_THETA_Z =   4.4    # degrees

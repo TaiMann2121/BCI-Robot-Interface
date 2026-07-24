@@ -278,7 +278,7 @@ CurrentTrial  InnerTrialCount  ArmPred_X  FingerMovePhase  CopilotFingerPred  ta
 ```python
 HOME_X  =  0.472   # meters — world X, ALONG the key row; hand over the CENTER key
 HOME_Y  = -0.516   # meters — depth (perpendicular to the key row)
-HOME_Z  =  0.131   # meters
+HOME_Z  =  0.115   # meters
 DEADZONE = 0.005   # meters — arm stops moving within this of target (~0.1 key)
 KP        = 3.0    # 1/s — proportional gain: velocity = KP * position_error
 MAX_SPEED = 0.4    # m/s — safety speed cap
@@ -309,17 +309,23 @@ To update the home position:
 
 ### Hand controller (`hand/RockScissorsPaper.cpp`)
 ```cpp
-// CopilotFingerPred 0/1/2 -> which Allegro finger flexes (joint ranges).
+// CopilotFingerPred 0/1/2 -> which Allegro finger presses. [0] is the proximal
+// (MCP) knuckle joint that drives the press.
 static const int fingerJoints[3][2] = { {1,3}, {5,7}, {9,11} }; // index / middle / ring
-static double press_flexion = 0.35;   // radians of flexion when pressing a key
+static double press_flexion = 0.80;   // radians the proximal knuckle rotates to press
 ```
 ```cpp
 // hand/myAllegroHand.cpp
 #define PRESS_HOLD_MS   400           // how long to hold a press before lifting
 ```
-Confirm `fingerJoints` matches how the three playing fingers are physically
-mounted over the keys, and tune `press_flexion` / `PRESS_HOLD_MS` so a press
-depresses the key cleanly without jamming.
+The press is driven almost entirely by the **proximal (MCP) knuckle** joint:
+`initpos` is calibrated so the fingertips already point straight down at the
+keys, and `PressFinger()` rotates just that one joint to drive the rigid
+fingertip down onto the key. Confirm `fingerJoints` matches how the three
+playing fingers are physically mounted (finger 2 / ring presses key index+1),
+and tune `press_flexion` / `PRESS_HOLD_MS` so a press depresses the key cleanly
+without jamming. The three playing fingers share one identical posture in
+`initpos`, so only one set of joint values needs tuning.
 
 The `initpos` array defines the hand's resting position (fingers hovering over the keys). If the hand needs to be recalibrated, add the following print block to `MainLoop()` in `myAllegroHand.cpp` immediately after the `MotionReset()` call, rebuild, and record the printed values to update `initpos` and `position` in `RockScissorsPaper.cpp`:
 
