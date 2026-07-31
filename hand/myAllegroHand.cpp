@@ -269,6 +269,20 @@ void MainLoop()
 				bRun = false;
 				break;
 			}
+			// ---- Bench force-measurement helpers ----
+			// Press a finger and HOLD it down (no auto-lift) so a scale can
+			// settle. 1/2/3 = left/center/right finger; L or H lifts to rest.
+			// The io thread keeps applying q_des, so the press holds until you
+			// lift. WARNING: don't leave a finger stalled against a hard surface
+			// for more than a few seconds at a time — lift ('L') between reads.
+			else if (c == '1') { printf("HOLD press: finger 0 (left)\n");   PressFinger(0); }
+			else if (c == '2') { printf("HOLD press: finger 1 (center)\n"); PressFinger(1); }
+			else if (c == '3') { printf("HOLD press: finger 2 (right)\n");  PressFinger(2); }
+			else if (c == 'l' || c == 'L' || c == 'h' || c == 'H')
+			{
+				printf("Lift to resting pose\n");
+				MotionReset();
+			}
 		}
 
 		// ---- Drain UDP buffer, keep only the most recent packet ----
