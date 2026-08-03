@@ -35,7 +35,7 @@ design is now a guess.
 ### 1. Budget approval
 | Option | Cost |
 |--------|-----:|
-| All 3D printed | **~$450** |
+| All 3D printed | **~$457** |
 | With a laser-cut base (see #2) | **~$295 + laser machine time** |
 
 Electronics are only ~$100 of either. I'd like to order those **now** so I can
@@ -52,7 +52,7 @@ normally mounted.
 
 I've drafted the layered version so both options are costed on the same basis.
 On money it's a **modest** win, not a dramatic one: printed mass drops from
-~490 g to ~275 g, but laser machine time is billed hourly and isn't published,
+~502 g to ~275 g, but laser machine time is billed hourly and isn't published,
 so the net saving is probably $40–90. I'll get a real number at the consult.
 
 ### 3. Funding account

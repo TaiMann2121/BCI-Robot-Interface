@@ -26,8 +26,8 @@ calibration still worked — only the key-width/gap split was mis-specified.
 
 ### Black keys (decorative)
 
-Per supervisor: **include the black keys even though the task never presses
-them.** Geometry mirrors the simulator exactly
+Per supervisor: include the black keys **and make them pressable**, even though
+the task never uses them. Geometry mirrors the simulator exactly
 (`Piano_Application_vel.py:775`) so the physical board matches the screen:
 
 | Property | Value |
@@ -36,7 +36,7 @@ them.** Geometry mirrors the simulator exactly
 | Width | 0.58 × key width = **26.1 mm** |
 | Length | 0.62 × key length = **86.8 mm**, occupying the **rear** |
 | Rise above white key tops | 10 mm (parametric) |
-| Function | **none** — fixed risers, no switch, no wiring |
+| Function | **switched** — one MX switch each, wired like the white keys |
 
 Indices `2,3,5,6,7` are the real C♯/D♯/F♯/G♯/A♯ of the C–B octave; `0` and `9`
 continue the visual pattern across the padding keys, exactly as the sim draws it.
@@ -49,94 +49,164 @@ continue the visual pattern across the padding keys, exactly as the sim draws it
 > fixes where the switch and stop shoulders sit. (The CAD still warns if
 > `contact_x` is ever moved into the black-key zone.)
 
+
+### Black keys are switched, and that reshapes the white keys
+
+Making the black keys pressable forced a change to a part that was otherwise
+settled. An **MX switch housing is 15.6 mm across and the gap between white
+keys is 5 mm** — the switch is three times too wide to fit, and even a bare
+pushrod carrying a keycap mount needs about 6 mm. There is no arrangement that
+puts a switch under a black key without widening that gap.
+
+So each white key is **notched by 7.5 mm on the side where a black key sits**,
+opening the gap to 20 mm. This is exactly what a real piano does and for the
+same reason, so the board also ends up looking more authentic:
+
+| White key | Rear width |
+|---|---|
+| no black neighbour | 45.0 mm |
+| one black neighbour | 37.5 mm |
+| two black neighbours | 30.0 mm |
+
+The notch runs from the start of the black key zone to x = 122 mm, stopping
+short of the hinge knuckle, which needs its full 45 mm to locate the key on the
+pin.
+
+**The black key itself** is a keycap pushed straight onto an MX stem, the way
+any keyboard keycap mounts — no hinge, no glue, no separate spring. It travels
+straight down while the white keys pivot. That difference is deliberate: a
+lever here would collide with the hinge brackets sharing the same gap, and
+black keys are never touched by the robot.
+
+**They also need no stop shoulders.** The white keys have them because the
+robot presses with 362–520 gf and would otherwise hammer the switch. Black keys
+are hand-pressed, so bottoming out at 3.6 mm is ordinary keyboard use, well
+inside the switch's 80 M cycle rating.
+
+> ⚠️ **Three clearances are tight and should be checked on the prototype:** the
+> socket boss leaves 0.5 mm each side in the widened gap; a fully pressed black
+> key clears the hinge posts by 0.9 mm; and the notch ends 0.5 mm before the
+> knuckle. All positive, none generous.
+
 ## Key → note → pin mapping
 
-Key index runs **left → right**. Indices 2–8 are the named white keys; 0,1
-and 9,10 are padding keys (they still sound, matching the sim). Sim
-frequencies are from `Piano_Application_vel.py:753`. "Deep" = one octave down
-(the placeholder sound), toggled by `OCTAVE_DOWN` in the firmware.
+**18 keys: 11 white + 7 black.** Key ids run **left → right**, id 0 being the
+leftmost key — the end carrying the orientation notch on the board.
 
-| Idx | Sim label | Sim note | Sim freq (Hz) | Deep freq (Hz) | Arduino pin |
-|----:|:---------:|:--------:|--------------:|---------------:|:-----------:|
-| 0   | (pad)     | Bb3      | 233           | 116            | D2          |
-| 1   | (pad)     | B3       | 247           | 123            | D3          |
-| 2   | **C**     | C4       | 262           | 131            | D4          |
-| 3   | **D**     | D4       | 294           | 147            | D5          |
-| 4   | **E**     | E4       | 330           | 165            | D6          |
-| 5   | **F**     | F4       | 349           | 175            | D7          |
-| 6   | **G**     | G4       | 392           | 196            | D8          |
-| 7   | **A**     | A4       | 440           | 220            | D9          |
-| 8   | **B**     | B4       | 494           | 247            | D10         |
-| 9   | (pad)     | C5       | 523           | 262            | D11         |
-| 10  | (pad)     | Db5      | 554           | 277            | D12         |
+White keys use the simulator's own frequencies unchanged
+(`Piano_Application_vel.py:753`), so the physical piano and the on-screen one
+sound identical.
 
-Speaker/piezo output: **D13**.
+| id | Key | Note | Hz | Pin |
+|---:|:---|:---:|---:|:---:|
+| 0  | white 0 (pad) | Bb3 | 233.08 | D2 |
+| 1  | white 1 (pad) | B3  | 246.94 | D3 |
+| 2  | white 2 | **C4** | 261.63 | D4 |
+| 3  | white 3 | **D4** | 293.66 | D5 |
+| 4  | white 4 | **E4** | 329.63 | D6 |
+| 5  | white 5 | **F4** | 349.23 | D7 |
+| 6  | white 6 | **G4** | 392.00 | D8 |
+| 7  | white 7 | **A4** | 440.00 | D9 |
+| 8  | white 8 | **B4** | 493.88 | D10 |
+| 9  | white 9 (pad) | C5 | 523.25 | D11 |
+| 10 | white 10 (pad) | Db5 | 554.36 | D12 |
+| 11 | black in gap 0/1 | A3 † | 220.00 | A5 |
+| 12 | black in gap 2/3 | C♯4 | 277.18 | A0 |
+| 13 | black in gap 3/4 | D♯4 | 311.13 | A1 |
+| 14 | black in gap 5/6 | F♯4 | 369.99 | A2 |
+| 15 | black in gap 6/7 | G♯4 | 415.30 | A3 |
+| 16 | black in gap 7/8 | A♯4 | 466.16 | A4 |
+| 17 | black in gap 9/10 | D5 † | 587.33 | **D13** |
+
+† Five black keys land on a real sharp. The outer two cannot: the simulator's
+padding keys are already a semitone apart (Bb3–B3 and C5–Db5), so no note
+exists between them. Those two continue the scale outwards instead. They are
+decorative keys the task never presses — change the values freely in
+`pc/piano_listener.py`, or set one to `0` to make that key silent.
+
+> **Why D13 carries a padding black key.** On many Uno clones pin 13 drives the
+> onboard LED directly, which can load `INPUT_PULLUP` enough to read
+> unreliably. It is therefore assigned the least important key, so a flaky pin
+> costs nothing that matters. If D13 misbehaves, that one decorative key stops
+> working and nothing else changes.
 
 ## Wiring
 
 Every switch uses the Arduino's internal pull-up (`INPUT_PULLUP`), so **no
-external resistors**. Wire each switch between its pin and GND:
+external resistors** and no polarity to get right. Each switch goes between its
+pin and GND:
 
 ```
-  D2 ─────[ key 0 switch ]───── GND
-  D3 ─────[ key 1 switch ]───── GND
-   ⋮            ⋮                 ⋮
- D12 ─────[ key 10 switch ]──── GND     (all switch commons tie to GND)
-
- D13 ──[ 100Ω ]──╢ piezo ╟──── GND      (passive buzzer / piezo)
-        or D13 ── amp IN, amp OUT ── speaker, for louder sampled/tone audio
+   D2 ─────[ white key 0 ]───── GND
+   D3 ─────[ white key 1 ]───── GND
+    ⋮             ⋮               ⋮
+  D12 ─────[ white key 10 ]──── GND
+   A5 ─────[ black gap 0/1 ]─── GND
+   A0 ─────[ black gap 2/3 ]─── GND
+    ⋮             ⋮               ⋮
+  D13 ─────[ black gap 9/10 ]── GND     (all commons tie to one GND bus)
 ```
 
-Pressed key reads LOW. Firmware debounces (15 ms) and plays the tone while the
-key is held, silencing on release. tone() is **monophonic** — only one key
-sounds at a time, which is fine because the robot presses one finger per phase.
+18 signal wires plus one common ground. A pressed key reads LOW; the firmware
+debounces for 15 ms, which clears the switch's 10 ms end-of-life bounce spec.
 
-## Sound (decided: electronic, computer-tunable)
+**There is no speaker on the board.** D13 was the only free pin and it is now a
+key — see below.
 
-Per supervisor: **electronic tones, tunable from a computer.** Implemented as
-Arduino `tone()` square-wave notes whose **pitch is set live over USB serial**
-and stored in EEPROM, so a tuned instrument keeps its sound with no computer
-attached and no re-flashing.
+## Sound: played by the computer
 
-- **What's tunable:** each key's frequency (Hz), 0 or 20–8000. `tone()` fixes
-  the *timbre* to a square wave — pitch and note length are adjustable, the
-  waveform shape is not. (Shaping the waveform itself would need a synthesis
-  library such as Mozzi, or the sampled-audio/DFPlayer path — out of scope for
-  the chosen "electronic" sound.)
-- **Defaults:** the simulator's 11 frequencies (matches BCI2000 out of the box).
-- **How to tune:** either open the Arduino IDE Serial Monitor (115200 baud) and
-  type commands, or use the helper below.
+The Arduino is a **pure key scanner**. It reports `P <id>` / `R <id>` over USB
+serial and makes no sound; `pc/piano_listener.py` receives those events and
+plays the notes.
 
-### Tuning workflow
+This is not a workaround. The BCI2000 simulator already plays its notes through
+`psychopy.sound`, so PC audio is the existing architecture rather than a
+departure from it — and it satisfies "electronic sound, tunable on a computer"
+more literally than square waves ever did.
 
-[`tuner/piano_tuner.py`](../tuner/piano_tuner.py) (needs `pip install pyserial`):
+**What it buys us**
+
+- The pin budget closes exactly. 18 switches need all 18 usable pins on an Uno
+  (D2–D13 plus A0–A5, with D0/D1 reserved for the serial link). A speaker would
+  have needed a 19th.
+- Real timbre, polyphony, and any tuning — all in software, no reflashing.
+- Simpler firmware: no `tone()`, no frequency table, no EEPROM.
+
+**What it costs**
+
+- The piano cannot make a sound standalone; the PC must be running the
+  listener. Since BCI2000 is running during any real use, this is not a
+  practical restriction.
+- Latency is roughly 15–40 ms end to end (USB serial plus audio buffer). For
+  scale, a real piano action takes ~30 ms from key to hammer.
+
+### Running it
 
 ```bash
-python tuner/piano_tuner.py --port COM5
+pip install pyserial numpy pygame
+python pc/piano_listener.py --test          # play every note, no hardware
+python pc/piano_listener.py --port COM5     # normal use
 ```
 
-Then, at the `tuner>` prompt: `set 4 300` to change a key, `play 4` to hear it,
-`save` to persist the whole set to the Arduino's EEPROM. Presets can be written
-to / read from JSON (`savefile deep.json` / `loadfile deep.json` then `push`)
-so you can keep e.g. a "deep" tuning and a "sim-matched" tuning side by side.
+`--test` is the quickest way to confirm audio works before any switch is wired.
+Add `--echo` to print each key event as it arrives.
 
-Firmware serial commands: `list | set <i> <hz> | play <i> | stop | save | load | reset | help`.
+The board also answers `ping` (replies `PONG`) and `keys` (lists every id with
+its pin) on the same serial port, which is handy for checking wiring one key at
+a time with the Arduino IDE's Serial Monitor.
 
 ## Bill of materials (buy)
 
 | Qty | Item | Notes |
 |----:|------|-------|
 | 1   | Arduino Uno or Nano | Uno is easiest to prototype; Nano if space-tight |
-| 11 (+spares) | **MX-style linear keyboard switches** (~45 gf, 4 mm travel) — *chosen* | Kailh/Cherry linear red. Supplies contact + return spring + travel in one part, so there is **no separate return spring**. 45 gf actuation is far below the weakest finger (362 gf). Standard 14 × 14 mm plate mount. Wire the two switch pins to the Arduino pin/GND |
-| 1   | Passive piezo buzzer *(fast path)* | Direct `tone()` output |
-| —   | *or* small Class-D amp + 8Ω speaker | Louder; needed if you later switch to sampled audio |
-| ~   | Hookup wire, breadboard or proto-PCB | 11 signal + common GND |
-| 1   | USB cable | Power + serial monitor |
+| 18 (+spares) | **MX-style linear keyboard switches** (~45 gf, 3.6 mm travel) — *chosen* | 11 white + 7 black. Kailh/Cherry linear red. Supplies contact + return spring + travel in one part, so there is **no separate return spring**. 45 gf actuation is far below the weakest finger (362 gf). Standard 14 × 14 mm plate mount. Wire the two switch pins to the Arduino pin/GND |
+| ~   | Hookup wire, breadboard or proto-PCB | 18 signal + common GND |
+| 1   | USB cable | Power, serial link, and the sound path |
 
-*Optional upgrade for real piano timbre (if supervisor wants samples, not
-beeps): DFPlayer Mini + microSD with 11 note WAV/MP3 files + 8Ω speaker. This
-also enables polyphony. Firmware would change from `tone()` to serial DFPlayer
-commands.*
+*No speaker, buzzer or amplifier is needed — the computer plays the notes. See
+**Sound** above. A piezo is still useful for bench-testing switches before the
+PC listener is set up, but it is not part of the finished instrument.*
 
 ## Make (3D print / machine shop)
 

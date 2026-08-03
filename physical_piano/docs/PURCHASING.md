@@ -1,7 +1,7 @@
 # Physical Piano — Parts to Purchase
 
-Shopping list for the 11-key physical piano. Quantities assume **11 white keys
-+ 7 decorative black keys**, one switch per white key, spares included.
+Shopping list for the 11-key physical piano. **18 switches**: one per white key
+(11) and one per black key (7) — the black keys are now clickable too.
 
 Prices are approximate and are there for budgeting — confirm
 at checkout. Links point to reputable distributors; equivalents are fine.
@@ -22,7 +22,7 @@ is far below our weakest finger (362 gf), so every finger triggers it reliably.
 
 | Qty | Item | ~Price | Link |
 |----:|------|-------:|------|
-| 2 packs (20 pcs, 9 spare) | Kailh linear red switches, 10-pack (MX-compatible) | ~$6/pack | [Adafruit #4952](https://www.adafruit.com/product/4952) |
+| 2 packs (20 pcs, 2 spare) | Kailh linear red switches, 10-pack (MX-compatible) | ~$6/pack | [Adafruit #4952](https://www.adafruit.com/product/4952) |
 | — | *or* Cherry MX Red 45 g linear, 10-pack | ~$12/pack | [Amazon MX1A-L1NN](https://www.amazon.com/Original-Cherry-Switches-Mechanical-Keyboard/dp/B09J3GSY6Y) · [MechanicalKeyboards.com](https://mechanicalkeyboards.com/products/cherry-mx-red-45g-linear) |
 
 ### ~~Option B: snap-action micro switches~~ (not chosen — kept for reference)
@@ -46,18 +46,20 @@ Datasheet (confirm operating force before ordering):
 |----:|------|-------:|------|
 | 1 | Arduino Uno R3 (official) | ~$28 | [Arduino Store](https://store-usa.arduino.cc/products/arduino-uno-rev3) · [SparkFun](https://www.sparkfun.com/arduino-uno-r3.html) |
 | — | *or* budget-compatible Uno R3 clone (works identically) | ~$13 | [ELEGOO UNO R3](https://us.elegoo.com/products/elegoo-uno-r3-board) |
-| 1 | Piezo buzzer (drives straight off `tone()`, no amp needed) | ~$2 | [Adafruit PS1240 #160](https://www.adafruit.com/product/160) |
-| 1 *(optional, louder)* | Large enclosed piezo element w/ wires | ~$3 | [Adafruit #1739](https://www.adafruit.com/product/1739) |
+**No speaker is required.** The computer plays the notes — the Arduino is a
+pure key scanner. All 18 usable Uno pins go to switches, so there is no pin
+left for a speaker and none is needed. The enclosed piezo already ordered is
+still useful for bench-testing switches before the PC listener is running, but
+it is not part of the finished instrument.
 
-Reference for wiring/driving the piezo:
-[Adafruit — Using Piezo Buzzers with Arduino](https://learn.adafruit.com/using-piezo-buzzers-with-circuitpython-arduino)
+| 1 *(optional)* | Enclosed piezo element — bench testing only | ~$3 | [Adafruit #1739](https://www.adafruit.com/product/1739) |
 
 ---
 
 ## 3. Wiring & assembly
 
 Wire the 11 switches in two stages: a **breadboard** to bring up and test the
-firmware/tuner before any key exists (no soldering, fully reversible), then a
+firmware before any key exists (no soldering, fully reversible), then a
 **soldered perfboard** for the permanent build. Solder is worth the extra step
 here — the keys get struck repeatedly at 362–520 gf, and a breadboard's
 friction-fit connections can work loose under that kind of repeated shock,
@@ -68,12 +70,12 @@ the no-solder screw-terminal option below is a durable middle ground.
 |----:|------|-------:|------|
 | 1 | Full-size solderless breadboard | ~$5 | [Adafruit #239](https://www.adafruit.com/product/239) — bring-up/testing only |
 | 1 | USB A–B cable (Uno) | ~$6 | [Adafruit #62](https://www.adafruit.com/product/62) · [Arduino Store](https://store-usa.arduino.cc/products/usb-2-0-cable-type-a-b) — likely already in lab stock |
-| 1 | Hookup wire, 22 AWG stranded, 6 colors | ~$15 | [Adafruit #3111](https://www.adafruit.com/product/3111) · [SparkFun](https://www.sparkfun.com/hook-up-wire-assortment-stranded-22-awg.html) |
+| 1 | Hookup wire, 22 AWG stranded, 6 colors — 18 signals + ground | ~$15 | [Adafruit #3111](https://www.adafruit.com/product/3111) · [SparkFun](https://www.sparkfun.com/hook-up-wire-assortment-stranded-22-awg.html) |
 | 1 | Perfboard / prototyping board | ~$11 | [Adafruit #1606](https://www.adafruit.com/product/1606) — final build |
 | 1 | Beginner soldering iron kit (iron, stand, solder, sucker, wick) | ~$20 | [Amazon — LCDalternatives kit](https://www.amazon.com/Beginner-Soldering-LCDalternatives-v3-solder/dp/B00SH2MOB6) |
 | 1 pack | K&S 3 mm brass rod, 3-pack (300 mm each) — hinge pin | ~$8 | [Amazon](https://www.amazon.com/Round-Brass-Rod-Diameter-Engineering/dp/B013Y2EACO) — the laser route uses one continuous ~570 mm pin, so butt two rods at a bracket |
 | 1 | M3 nut/bolt/washer assortment kit | ~$12 | [Amazon](https://www.amazon.com/Assortment-Stainless-Washers-Assorted-Machine/dp/B0BC24J6SS) |
-| 6 | M3 standoffs, 12 mm — lift the board so switch pins and wiring clear the desk | ~$9 | [Amazon](https://www.amazon.com/Hilitchi-Female-Standoff-Assortment-Motherboard/dp/B01LZ6PXCY) |
+| 6 | M3 standoffs, 12 mm — **laser route only**; the printed route has feet built into every base cell | ~$9 | [Amazon](https://www.amazon.com/Hilitchi-Female-Standoff-Assortment-Motherboard/dp/B01LZ6PXCY) |
 | 1 | Gorilla super glue (cyanoacrylate) | ~$7 | [Amazon](https://www.amazon.com/Gorilla-Super-Glue-Gram-Clear/dp/B00KPYB05A) — gluing black keys into locating grooves |
 
 **No-solder alternative** — skip the perfboard + soldering kit above and use
@@ -100,9 +102,10 @@ gives the real number):
 | White key lever | 11 | ~16 g | ~175 g |
 | Base cell | 11 | ~23 g | ~255 g |
 | Black key | 7 | ~9 g | ~65 g |
-| | | **Total** | **~490 g** |
+| Integral feet | 11 pairs | ~0.9 g | ~10 g |
+| | | **Total** | **~502 g** |
 
-At PLA **$0.64/g** → **~$315**.
+At PLA **$0.64/g** → **~$321**.
 
 On the laser route the printed base cells are replaced by **12 small hinge
 brackets** (~3 g each), so printing drops to ~275 g → **~$176**, plus the laser
@@ -115,7 +118,7 @@ sheets and machine time.
 > calibrated to has no tile seams to drift across. The printed base has to be
 > split into 3 tiles for a 254 mm bed.
 >
-> On cost, be realistic: printed mass drops from ~490 g to ~275 g (**$315 →
+> On cost, be realistic: printed mass drops from ~502 g to ~275 g (**$321 →
 > ~$176**), but laser time is billed hourly and is not quoted on the services
 > page, so the net saving is more like **$40–90, not half**. Treat the pitch
 > accuracy as the reason and the cost as a bonus.
@@ -127,19 +130,19 @@ sheets and machine time.
 | Category | Estimate |
 |----------|---------:|
 | Switches | ~$12 |
-| Arduino + sound | ~$30 |
+| Arduino + optional test piezo | ~$31 |
 | Wiring & assembly — solder path (breadboard + perfboard + soldering kit) | ~$93 |
 | *or* wiring & assembly — no-solder path (breadboard + screw-terminal shield) | *~$77* |
-| **Parts subtotal — solder path** | **~$135** |
-| *Parts subtotal — no-solder path* | *~$119* |
-| Fabrication — all 3D printed | ~$315 |
+| **Parts subtotal — solder path** | **~$136** |
+| *Parts subtotal — no-solder path* | *~$120* |
+| Fabrication — all 3D printed | ~$321 |
 | Fabrication — laser-cut base + printed keys | ~$176 print + laser time |
-| **Grand total — solder path + all-printed** | **~$450** |
-| *Grand total — no-solder path + laser-cut* | *~$295 + laser time* |
+| **Grand total — solder path + all-printed** | **~$457** |
+| *Grand total — no-solder path + laser-cut* | *~$296 + laser time* |
 
 The soldering kit (~$20) is a one-time purchase — skip it on the no-solder path,
 or keep it if the lab wants one on hand for future builds.
 
 **Suggested first purchase:** buy the electronics now (~$100) so the firmware and
-tuner can be bench-tested on a breadboard while the mechanical parts are still
+listener can be bench-tested on a breadboard while the mechanical parts are still
 being printed. The two tracks are independent.

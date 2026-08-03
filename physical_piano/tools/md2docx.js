@@ -16,12 +16,22 @@ const INK = "1A1A1A", MUTED = "5C5C5C", RULE = "D8D8D8", ACCENT = "6B4D0F", HEAD
 const thin = { style: BorderStyle.SINGLE, size: 2, color: RULE };
 const cellBorders = { top: thin, bottom: thin, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } };
 
+// Backslash-escaped characters are swapped for private-use codepoints BEFORE
+// the markup scan, so \* is removed from the text the italic rule sees and
+// cannot pair with another asterisk. push() swaps them back on the way out.
+// Marking them in place is not enough - the character itself must leave the
+// string, or the surviving pair still reads as markup.
+const ESC_MAP = { "*": "\uE001", "_": "\uE002", "`": "\uE003", "~": "\uE004",
+                  "[": "\uE005", "]": "\uE006", "\\": "\uE007" };
+const UNESC = Object.fromEntries(Object.entries(ESC_MAP).map(([k, v]) => [v, k]));
+
 // ---- inline markdown -> TextRun[] ----
 function inline(md, base = {}) {
   const runs = [];
+  md = md.replace(/\\([*_`~\[\]\\])/g, (_, c) => ESC_MAP[c]);
   const re = /(\[([^\]]+)\]\(([^)]+)\))|(\*\*([^*]+)\*\*)|(`([^`]+)`)|(\*([^*]+)\*)|(~~([^~]+)~~)/g;
   let last = 0, m;
-  const push = (t, o = {}) => { if (t) runs.push(new TextRun({ text: t, size: 19, color: INK, ...base, ...o })); };
+  const push = (t, o = {}) => { t = t.replace(/[\uE001-\uE007]/g, (c) => UNESC[c]); if (t) runs.push(new TextRun({ text: t, size: 19, color: INK, ...base, ...o })); };
   while ((m = re.exec(md)) !== null) {
     push(md.slice(last, m.index));
     if (m[1]) {

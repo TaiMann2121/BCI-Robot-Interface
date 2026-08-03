@@ -65,7 +65,7 @@ Go to **HH C124** and talk to Jen Hitchcock. Bring the CAD and these questions:
      just a cost;
    - likely fit the laser bed in one piece (545 mm) where the 254 mm print bed
      cannot;
-   - reduce printed mass from ~490 g to ~305 g (**$315 → ~$195**). Note the
+   - reduce printed mass from ~502 g to ~275 g (**$321 → ~$176**). Note the
      saving is *modest*, not half: laser machine time is billed hourly and
      isn't quoted on the services page, so net saving is likely **$30–80**.
      **Ask what laser time actually costs** — it decides whether the cost
@@ -82,8 +82,12 @@ Go to **HH C124** and talk to Jen Hitchcock. Bring the CAD and these questions:
    **~1.5 mm stock** (the thickness MX switches clip into)? If 1.5 mm is too
    flimsy over that span, is a stepped two-layer plate (1.5 mm with 14 mm holes
    over a thicker backing with clearance holes) feasible?
-4. **Tile joining** — *only if question 3 is a no.* Best way to align/join the
-   three printed base tiles so the 50 mm key pitch stays accurate across seams.
+4. **Tile joining.** The base cells now carry alignment dowel half-holes on
+   every edge, so a tile seam closes onto a 3 mm rod rather than being butted
+   by eye. Worth asking whether they would also glue or pin the seam, since
+   the 50 mm key pitch — what the arm is calibrated to — has to survive two
+   joins on this route. **This is now the likely route**, so it deserves more
+   attention than the laser alternative.
 5. Turnaround time and how billing works against our lab's oracle string.
 
 ### Phase 2 — Prototype ONE key
@@ -128,10 +132,16 @@ re-run the demo sequence.
 
 | Part | File | `mode` | Process | Qty |
 |------|------|--------|---------|----:|
-| Key lever | `piano_keys.scad` | `"key"` | print, PLA ~20% infill | 11 |
-| Black key | `piano_keys.scad` | `"black"` | print | 7 |
+| Key lever (notched for the black keys) | `piano_keys.scad` | `"key"` | print, PLA ~20% infill | 11 |
+| Black key (switched keycap) | `piano_keys.scad` | `"black"` | print | 7 |
 | Base tile (5 cells) | `piano_base_printed.scad` | `"tile"` | print | 3 (5+5+1) |
+| Frame cheek | `piano_frame.scad` | `"cheek"` | print | 2 |
+| Frame front rail segment | `piano_frame.scad` | `"front_seg"` | print | 3 |
+| Frame back rail segment | `piano_frame.scad` | `"back_seg"` | print | 3 |
 | Hinge pin | — | — | buy 3 mm rod, cut | — |
+| Tile alignment dowels | — | — | same 3 mm rod, 4 short pieces | — |
+
+Feet are printed into every base cell, so this route needs **no standoffs**.
 
 **Route B — laser-cut base** *(the one we're asking about)*
 

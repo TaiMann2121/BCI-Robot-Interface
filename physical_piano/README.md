@@ -12,8 +12,8 @@ switch datasheet. Nothing has been bought or fabricated yet.
 docs/       specifications and plans (Markdown — the source of truth)
 share/      the same docs as .docx, for the shared Drive folder
 cad/        OpenSCAD models
-firmware/   Arduino sketch
-tuner/      computer-side tone tuning tool
+firmware/   Arduino sketch — key scanner only, makes no sound
+pc/         computer-side listener that plays the notes
 tools/      scripts that generate share/*.docx from docs/*.md
 ```
 
@@ -23,7 +23,7 @@ tools/      scripts that generate share/*.docx from docs/*.md
 |------|---------------|
 | [docs/SUPERVISOR_BRIEF.md](docs/SUPERVISOR_BRIEF.md) | **One page + the 4 decisions needed** — for the supervisor meeting |
 | [docs/BUILD.md](docs/BUILD.md) | The spec: dimensions, sound, measured forces, mechanism |
-| [docs/PURCHASING.md](docs/PURCHASING.md) | What to buy, with links and budget (~$450) |
+| [docs/PURCHASING.md](docs/PURCHASING.md) | What to buy, with links and budget (~$457) |
 | [docs/TECHSPARK_PLAN.md](docs/TECHSPARK_PLAN.md) | Fabrication plan + **parts manifest** |
 | [docs/datasheets/](docs/datasheets/) | Kailh switch datasheet — the source for every switch dimension |
 
@@ -35,6 +35,7 @@ tools/      scripts that generate share/*.docx from docs/*.md
 | [cad/piano_keys.scad](cad/piano_keys.scad) | Key levers + black keys — **printed in both routes** | both |
 | [cad/piano_base_printed.scad](cad/piano_base_printed.scad) | All-printed base (cells, 3 tiles) | route A |
 | [cad/piano_base_laser.scad](cad/piano_base_laser.scad) | Laser base (2 sheets + stop rail) + 12 printed brackets | route B |
+| [cad/piano_frame.scad](cad/piano_frame.scad) | Cosmetic surround — cheeks and rails. Purely aesthetic, print last | either |
 
 > The two `base_*` files are **alternatives — build one, not both.** Either way
 > you also need `piano_keys.scad`. Full breakdown in the TechSpark plan's parts
@@ -77,7 +78,9 @@ node tools/build_bom_docx.js          # the BOM, which has a custom layout
 ### ④ Build
 
 7. Full run: 11 keys, 7 black keys, and the base for whichever route was chosen.
-8. Wire the switches, flash the firmware, tune the tones.
+8. Wire the 18 switches, flash the firmware, then run
+   `python pc/piano_listener.py --port COMx`. Check audio first with
+   `--test`, which needs no hardware.
 9. Raise the arm ~5–8 mm so resting fingertips hover 2–5 mm above the key tops.
 10. Re-run the demo sequence to validate.
 
