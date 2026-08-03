@@ -15,6 +15,23 @@
 // without re-measuring.
 // =====================================================================
 
+// ---------------- ORIENTATION — read this before changing any layout ----
+// x = along the key, 0 at the FRONT edge (the side the fingers press)
+// z = up
+// y = across the keys
+//
+// Standing at the front looking at the board: forward = +x, up = +z, so the
+// viewer's right = (+x cross +z) = -y. In other words **+y is the viewer's
+// LEFT**.
+//
+// The simulator draws key 0 LEFTMOST, so key 0 must sit at HIGH y. The layout
+// functions in the base files handle that. Do NOT "fix" a mirrored-looking
+// render by editing black_idx — the board is near enough symmetric that a
+// camera on the wrong side swaps the C#D# pair and the F#G#A# triplet, and
+// mirroring the list to compensate leaves key 0 at the wrong end, which would
+// wire the whole piano backwards.
+n_keys    = 11;
+
 // ---------------- Key layout (MEASURED) ----------------
 key_w     = 45;      // key width  (mm)
 key_len   = 140;     // key length (mm)
@@ -75,7 +92,14 @@ mx_act_gf     = 45;   // OF operating force, 45 +/-10 gf
 com_arm       = 57;   // key centre of mass from the pivot
 
 // ---------------- Black keys (mirrors the simulator) ----------------
+// IDENTICAL to blackKeyIndices in Piano_Application_vel.py:775. A black key
+// sits between white keys b and b+1. Left to right this reads as a single,
+// then the C#/D# pair, then the F#/G#/A# triplet, then a single.
 black_idx    = [0, 2, 3, 5, 6, 7, 9];
+
+// true if a black key sits between white key i and i+1
+function is_black(i) = len([for (b = black_idx) if (b == i) 1]) > 0;
+
 black_w      = key_w   * 0.58;   // 26.1
 black_len    = key_len * 0.62;   // 86.8, occupies the REAR
 black_rise   = 10;
@@ -85,6 +109,31 @@ blk_web_x0   = 62;
 blk_web_x1   = 120;   // stops short of the hinge posts
 blk_groove_d = 3;
 front_clear  = key_len - black_len;   // 53.2 — fingers must contact inside this
+
+// ---------------- Black keys are SWITCHED, not decorative -------------
+// This forces the white keys to be notched. An MX switch housing is 15.6 mm
+// across and the inter-key gap is only 5 mm, so a switch cannot sit under a
+// black key until that gap is widened. Narrowing the white keys where a black
+// key sits is exactly what a real piano does, so the board also ends up
+// looking more authentic.
+blk_notch    = 7.5;   // how much a white key narrows on each black-key side
+blk_notch_x0 = front_clear;  // notch starts where the black keys start
+blk_notch_x1 = 122;   // ...and stops before the hinge knuckle, which needs
+                      // its full 45 mm width to locate the key on the pin
+blk_switch_x = 75;    // black key switch position along the key
+
+// MX keycap mount: the black keycap pushes straight onto the switch stem, the
+// way any keyboard keycap does. No lever, no separate return spring.
+mx_mount_cross = 4.2;   // cross arm span, with clearance
+mx_mount_th    = 1.35;  // cross arm thickness
+mx_mount_depth = 4.0;   // how deep the cap socket swallows the stem
+
+// Black keys are pressed by hand, never by the robot (fingers land at
+// contact_x = 35, well forward of front_clear). They therefore need NO stop
+// shoulders: bottoming out on the switch at 3.6 mm is ordinary keyboard use,
+// which the 80 M cycle rating covers. The stops on the white keys exist only
+// because the robot presses those with 362-520 gf.
+blk_travel   = mx_travel;
 
 // ---------------- Derived heights — DO NOT hardcode these anywhere ----
 mx_plate_z  = base_th + mx_riser_h;                 // 10.5 switch plate top
@@ -98,6 +147,13 @@ key_top_z   = pivot_z + cap_th;                     // 30.2 above the board
 black_top_z = key_top_z + black_rise;               // 40.2
 
 foot_h      = 12;    // standoff height under the board (wiring space)
+
+// ---------------- Orientation marker ----------------
+// KEY 0 IS AT LOW Y. The board is nearly symmetric, so a mirrored view reads
+// as a wrong black-key layout (the C#D# pair and F#G#A# triplet swap places).
+// A physical notch at the key-0 end removes the ambiguity, both on screen and
+// on the bench when wiring 18 switches in the right order.
+mark_size   = 8;     // notch cut into the board's front-left corner
 
 // ---------------- Worst-case switch travel (datasheet tolerances) -----
 travel_min   = mx_travel  - mx_travel_tol;    // 3.3 — earliest bottom-out

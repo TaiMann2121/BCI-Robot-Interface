@@ -42,20 +42,36 @@ $fn = 48;
 // =====================================================================
 // Key lever (the moving key cap). Printing it upside-down is easiest.
 // =====================================================================
-module key_lever() {
-    union() {
-        // top plate
-        translate([0, -key_w/2, under_rest]) cube([key_len, key_w, cap_th]);
-        // side rails (cosmetic skirts) — INSIDE the key width so they clear
-        // the hinge posts and the neighbouring key
-        for (s = [-1, 1])
-            translate([0, (s > 0) ? (key_w/2 - side_rail) : -key_w/2, under_rest - 6])
-                cube([key_len, side_rail, 6 + 0.1]);
-        // rear hinge knuckle, centred in y, pin axis along Y
-        translate([pivot_x, 0, pivot_z]) knuckle();
-        // plunger at contact_x: presses the MX stem (no spring — MX returns it)
-        translate([contact_x, 0, 0]) plunger();
+// `idx` is the white-key index 0..10. It decides which sides get notched to
+// clear the neighbouring black keys' switches. Pass -1 for an un-notched key.
+module key_lever(idx = -1) {
+    difference() {
+        union() {
+            // top plate
+            translate([0, -key_w/2, under_rest]) cube([key_len, key_w, cap_th]);
+            // side rails (cosmetic skirts) — INSIDE the key width so they clear
+            // the hinge posts and the neighbouring key
+            for (s = [-1, 1])
+                translate([0, (s > 0) ? (key_w/2 - side_rail) : -key_w/2, under_rest - 6])
+                    cube([key_len, side_rail, 6 + 0.1]);
+            // rear hinge knuckle, centred in y, pin axis along Y
+            translate([pivot_x, 0, pivot_z]) knuckle();
+            // plunger at contact_x: presses the MX stem (no spring — MX returns it)
+            translate([contact_x, 0, 0]) plunger();
+        }
+        // Notch the rear of the key wherever a black key sits beside it, so its
+        // switch has room. Real piano white keys are shaped the same way, and
+        // for the same reason. The notch stops at blk_notch_x1 so the hinge
+        // knuckle keeps its full width.
+        if (is_black(idx))     notch( 1);
+        if (is_black(idx - 1)) notch(-1);
     }
+}
+
+module notch(side) {
+    y0 = (side > 0) ? (key_w/2 - blk_notch) : -(key_w/2);
+    translate([blk_notch_x0, y0, under_rest - 8])
+        cube([blk_notch_x1 - blk_notch_x0, blk_notch, cap_th + 10]);
 }
 
 // Hinge knuckle. Origin is the PIN CENTRE, so it is called with
@@ -88,17 +104,36 @@ module plunger() {
 // White keys only travel DOWN, so the overhang never collides.
 // Print flat on its side for strength along the web.
 // =====================================================================
+// A SWITCHED black key: a keycap on a post that pushes straight onto an MX
+// stem, exactly like a keyboard keycap. No hinge, no glue, no return spring —
+// the switch supplies the travel and the spring.
+//
+// It travels straight down while the white keys pivot. Slightly different feel,
+// but the black keys are never pressed by the robot, and a lever here would
+// collide with the hinge brackets that share the same 5 mm gap.
 module black_key() {
-    web_top = black_top_z - blk_cap_th;
-    union() {
-        // web / stem (also the glue tab, reaching down into the groove)
-        translate([blk_web_x0, -black_stem_w/2, base_th - blk_groove_d])
-            cube([blk_web_x1 - blk_web_x0, black_stem_w,
-                  web_top - (base_th - blk_groove_d)]);
-        // cap
-        translate([key_len - black_len, -black_w/2, web_top])
-            cube([black_len, black_w, blk_cap_th]);
+    cap_under = black_top_z - blk_cap_th;
+    post_w    = mx_mount_cross + 2.4;      // socket plus wall
+    difference() {
+        union() {
+            // cap
+            translate([key_len - black_len, -black_w/2, cap_under])
+                cube([black_len, black_w, blk_cap_th]);
+            // post down to the switch stem, centred on blk_switch_x
+            translate([blk_switch_x - post_w/2, -post_w/2, stem_top_z])
+                cube([post_w, post_w, cap_under - stem_top_z + 0.1]);
+        }
+        // MX cross socket in the underside of the post
+        translate([blk_switch_x, 0, stem_top_z - 0.1]) mx_mount();
     }
+}
+
+// The + shaped recess an MX stem plugs into.
+module mx_mount() {
+    for (r = [0, 90])
+        rotate([0, 0, r])
+            translate([-mx_mount_cross/2, -mx_mount_th/2, 0])
+                cube([mx_mount_cross, mx_mount_th, mx_mount_depth + 0.1]);
 }
 
 // =====================================================================

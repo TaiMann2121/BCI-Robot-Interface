@@ -49,8 +49,6 @@ use     <piano_keys.scad>      // key_lever() / black_key() for previews
 
 $fn = 48;
 
-n_keys    = 11;
-
 // Side margin so the OUTERMOST hinge brackets land on material. Without it the
 // boundary positions at each end fall exactly on the board edge (or past it).
 margin_side = 10;
@@ -115,20 +113,23 @@ hinge_post_w   = 4;             // bracket thickness — must fit the 5 mm gap
 hinge_bolt_x1  = pivot_x + 7;
 hinge_bolt_x2  = pivot_x + 17;
 
-// Black key webs drop through slots cut in the plate and spacer at the black
-// boundaries. Matches blk_web_x0/x1 and black_stem_w in piano_params.scad.
-blk_idx      = [0, 2, 3, 5, 6, 7, 9];
-blk_slot_w   = 4.0;             // black_stem_w 3.6 + clearance
+// Black key webs drop through slots cut at the black boundaries. The POSITIONS
+// come from black_idx in piano_params.scad — this file must never keep its own
+// copy of that list, or the two can drift the way pivot_z once did.
 
 // Hinge brackets sit ON THE BOUNDARIES between keys (in the 5 mm gaps), not
 // under the keys — a bracket under a key would foul the cap. One bracket per
 // boundary, including the two outer edges, so 12 across the board. They all
 // carry ONE continuous pin rod, which also guarantees every pivot is collinear.
 n_hinge = n_keys + 1;
-function boundary_y(j) = (j - n_keys / 2) * pitch;   // j = 0 .. n_keys
+// Negated to match key_y above — boundary_y(b+1) stays the midpoint between
+// key b and key b+1 either way.
+function boundary_y(j) = -(j - n_keys / 2) * pitch;   // j = 0 .. n_keys
 
-// key centre y for key index i, with the board centred on y=0
-function key_y(i) = (i - (n_keys - 1) / 2) * pitch;
+// Key centre y for key index i, board centred on y=0.
+// NEGATED so key 0 lands at HIGH y = the viewer's LEFT, matching the simulator.
+// See the orientation note at the top of piano_params.scad.
+function key_y(i) = -(i - (n_keys - 1) / 2) * pitch;
 // x is measured from the key's FRONT edge; board local x adds the margin
 function bx(x) = x + margin_front;
 
@@ -136,7 +137,18 @@ function bx(x) = x + margin_front;
 // 2D LAYER PROFILES  (export these to DXF)
 // =====================================================================
 
-module outline() { square([board_l, board_w], center = false); }
+// Board outline with a corner notch at the KEY 0 end. Cut into every layer, so
+// the assembled board carries a permanent "this end is key 0" mark. Without it
+// the board is near enough symmetric that a mirrored view (or flipping it on
+// the bench) silently reverses the key order.
+module outline() {
+    difference() {
+        square([board_l, board_w], center = false);
+        // Notch at the FRONT edge, KEY 0 end. Key 0 is at high y (viewer's
+        // left), so the notch goes in the far-y front corner.
+        polygon([[0, board_w], [mark_size, board_w], [0, board_w - mark_size]]);
+    }
+}
 
 // Bolt pattern shared by every layer so the stack aligns. Bolts sit on the key
 // BOUNDARIES (in the 5 mm gaps) so they never sit under a moving key. The rear
@@ -152,12 +164,14 @@ module stack_bolts() {
     }
 }
 
-// Slots for the black key webs, cut through the spacer and the switch plate.
-module black_slots() {
-    for (b = blk_idx) {
+// Black key switch holes, on the key boundaries. Black keys are switched now,
+// so they need the same treatment as the white ones: an exact 14 mm cutout in
+// the switch plate and a clearance hole everywhere else. The old web slots are
+// gone — nothing is glued in any more.
+module black_holes(d) {
+    for (b = black_idx) {
         y = boundary_y(b + 1) + board_w / 2;
-        translate([bx(blk_web_x0), y - blk_slot_w / 2])
-            square([blk_web_x1 - blk_web_x0, blk_slot_w]);
+        translate([bx(blk_switch_x), y]) square([d, d], center = true);
     }
 }
 
@@ -184,12 +198,12 @@ module layer_2d(switch_hole) {
         stack_bolts();
         hinge_bolts();
         foot_bolts();
-        black_slots();
         for (i = [0 : n_keys - 1]) {
             y = key_y(i) + board_w / 2;
             translate([bx(contact_x), y])
                 square([switch_hole, switch_hole], center = true);
         }
+        black_holes(switch_hole);
     }
 }
 
@@ -292,10 +306,13 @@ module assembly_3d() {
     // routes can be compared side by side. Set show_keys = false to see the
     // laser parts unobstructed.
     if (show_keys) {
+        // Orientation check: reading left to right the black keys must go
+        // single, PAIR, TRIPLET, single. Triplet before pair means the camera
+        // is behind the board — move the camera, do not edit black_idx.
         for (i = [0 : n_keys - 1])
             color("white")
-                translate([margin_front, key_y(i) + board_w / 2, 0]) key_lever();
-        for (b = blk_idx)
+                translate([margin_front, key_y(i) + board_w / 2, 0]) key_lever(i);
+        for (b = black_idx)
             color("black")
                 translate([margin_front, boundary_y(b + 1) + board_w / 2, 0]) black_key();
     }

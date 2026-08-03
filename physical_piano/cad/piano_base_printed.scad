@@ -37,26 +37,78 @@ module base_cell(idx = -1) {
             hinge_post(1);
             hinge_post(-1);
             translate([contact_x, 0, base_th]) mx_socket();
+            // half of each neighbouring black key's switch socket
+            if (is_black(idx))      translate([0,  pitch/2, 0]) black_socket();
+            if (is_black(idx - 1))  translate([0, -pitch/2, 0]) black_socket();
+            cell_feet();
         }
         // Clearance for the switch body and pins, which hang mx_below_plate
         // (6.4 mm) under the plate — more than fits inside the socket riser.
-        // It goes right through the base so the pins hang in free air and the
-        // wires are soldered from underneath; the board stands on feet.
+        // It goes right THROUGH the base so the pins hang in free air, the
+        // wires are soldered from underneath, and the harness runs in the
+        // space the feet create out to the Arduino.
         translate([contact_x - (mx_cut + 3)/2, -(mx_cut + 3)/2, -1])
             cube([mx_cut + 3, mx_cut + 3, base_th + 2]);
-        // Black-key locating half-grooves at the cell edges. Two butted cells
-        // form one full groove; the black key's web drops in and is glued.
-        if (is_black(idx))      translate([0,  pitch/2, 0]) black_groove();
-        if (is_black(idx - 1))  translate([0, -pitch/2, 0]) black_groove();
+        // Black keys are switched now, so each needs a switch cavity through
+        // the plate rather than a groove to be glued into. Half the cavity
+        // falls in each neighbouring cell; two butted cells form the whole.
+        if (is_black(idx))      translate([0,  pitch/2, 0]) black_switch_cut();
+        if (is_black(idx - 1))  translate([0, -pitch/2, 0]) black_switch_cut();
+        // Alignment dowel half-holes on both cell edges.
+        for (s = [-1, 1]) translate([0, s * pitch/2, 0]) dowel_holes();
     }
 }
 
-// true if a black key sits between white key i and i+1
-function is_black(i) = len([for (b = black_idx) if (b == i) 1]) > 0;
+// Integral feet, one pair per cell. They lift the board by foot_h so the
+// switch pins (which hang mx_below_plate under the plate) clear the desk and
+// the wiring harness has somewhere to run. Printed as part of the cell — no
+// standoffs to buy and nothing to align.
+module cell_feet() {
+    for (x = [15, 125])
+        translate([x, 0, -foot_h]) cylinder(h = foot_h + 0.1, d = 10);
+}
 
-module black_groove() {
-    translate([blk_web_x0, -(black_stem_w + clr)/2, base_th - blk_groove_d])
-        cube([blk_web_x1 - blk_web_x0, black_stem_w + clr, blk_groove_d + 1]);
+// Half-holes on each cell edge. Inside a printed tile these are just holes;
+// at a TILE SEAM the two halves form one bore, and a length of the same 3 mm
+// rod used for the hinge pins registers the tiles to each other.
+//
+// This matters specifically for the printed route: the board is split into 3
+// tiles for the 254 mm print bed, so the 50 mm key pitch — the thing the arm
+// is calibrated to — has to survive two joins. Butting the tiles by eye would
+// put that at risk; a dowel makes the joint repeatable.
+module dowel_holes() {
+    // x positions clear of the switch cavity (25-45), the black key groove
+    // (62-120) and the hinge posts (122.5-131.5)
+    for (x = [12, 137])
+        translate([x, 0, -1]) cylinder(h = base_th + 2, d = pin_d);
+}
+
+// Physical y of key index i. Mirrored so key 0 lands at HIGH y, which is the
+// viewer's LEFT when standing at the front — matching how the simulator draws
+// it. See the orientation note at the top of piano_params.scad.
+function slot_y(i) = (n_keys - 1 - i) * pitch;
+
+// Clearance through the base plate for a black key's switch body and pins,
+// centred on the key boundary. The socket that actually holds the switch is
+// added in the union (black_socket); this is just the hole beneath it.
+module black_switch_cut() {
+    translate([blk_switch_x - (mx_cut + 3)/2, -(mx_cut + 3)/2, -1])
+        cube([mx_cut + 3, mx_cut + 3, base_th + 2]);
+}
+
+// The black key's MX socket. Same 14 mm plate cutout as the white keys, but
+// with NO stop shoulders: black keys are hand-pressed, so bottoming out on the
+// switch is ordinary keyboard use. Origin on the key boundary.
+module black_socket() {
+    boss = mx_cut + 2*2.5;
+    difference() {
+        translate([blk_switch_x - boss/2, -boss/2, base_th])
+            cube([boss, boss, mx_riser_h]);
+        translate([blk_switch_x - mx_cut/2, -mx_cut/2, base_th + mx_riser_h - mx_plate_th])
+            cube([mx_cut, mx_cut, mx_plate_th + 1]);
+        translate([blk_switch_x - (mx_cut+2)/2, -(mx_cut+2)/2, base_th - 1])
+            cube([mx_cut + 2, mx_cut + 2, mx_riser_h - mx_plate_th + 1]);
+    }
 }
 
 // One hinge post. side = +1 / -1 puts it just outside the key cap, inside the
@@ -109,7 +161,7 @@ tile_i0 = 0;     // index of the first white key in this tile
 
 if (mode == "assembly") {
     color("gray")  base_cell(0);
-    color("white") key_lever();
+    color("white") key_lever(0);
     color("black") translate([0, pitch/2, 0]) black_key();
 } else if (mode == "base") {
     base_cell(0);
@@ -117,10 +169,18 @@ if (mode == "assembly") {
     for (i = [0 : tile_n - 1])
         translate([0, i*pitch, 0]) base_cell(tile_i0 + i);
 } else if (mode == "full") {
-    for (i = [0:10]) translate([0, i*pitch, 0]) {
+    // Orientation check: reading left to right the black keys must go single,
+    // PAIR, TRIPLET, single. Triplet before pair means the camera is behind the
+    // board — move the camera, do not edit black_idx.
+    //
+    // slot_y() mirrors the index so key 0 lands at HIGH y = the viewer's left,
+    // matching the simulator. See the orientation note in piano_params.scad.
+    for (i = [0 : n_keys - 1]) translate([0, slot_y(i), 0]) {
         color("gray")  base_cell(i);
-        color("white") key_lever();
+        color("white") key_lever(i);
     }
-    for (i = black_idx)
-        color("black") translate([0, i*pitch + pitch/2, 0]) black_key();
+    // a black key sits midway between the slots of key b and key b+1
+    for (b = black_idx)
+        color("black")
+            translate([0, (slot_y(b) + slot_y(b + 1)) / 2, 0]) black_key();
 }
