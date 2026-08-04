@@ -247,7 +247,7 @@ module mx_cuts() { switch_cuts(0); }
 // "assembly"  one cell + one key + one black key, for checking fit up close
 // "base"      one bare base cell
 // "tile"      one printable tile -> set tile_i and print all 3
-mode   = "full";
+mode   = "assembly";
 tile_i = 0;      // which tile to render: 0, 1 or 2. Cells and seam-safety are
                  // set by tile_first / tile_last near the top of this file.
 

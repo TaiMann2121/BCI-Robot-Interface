@@ -342,6 +342,34 @@ reaches the stem against a 45 gf requirement — a huge margin the right way.
 > and self-trigger. At ~20% infill (16 g → 9.9 gf) there is a 1.5× margin. The
 > CAD warns if `key_mass_g` exceeds the limit.
 
+### Cut a hole-size test coupon FIRST
+
+The datasheet specifies the plate cutout itself — **14.00 ±0.05 mm square, corners
+R0.30 max, in 1.50 ±0.1 mm material** (s.10, "Metal Frame Cutout Dimensions").
+The CAD matches that exactly. The problem is not the drawing, it is that
+**neither fabrication process naturally holds ±0.05 mm on a 14 mm feature:**
+
+- **FDM undersizes holes**, typically by 0.1–0.4 mm. A nominal 14.00 can come off
+  the printer at 13.6–13.9. The switch body is up to 14.00, so it either will not
+  go in, or goes in so tightly the clips cannot spring out and latch.
+- **Laser cutting oversizes them**, because the kerf (~0.15–0.25 mm) is removed
+  from the part. An uncompensated 14.00 vector path yields a ~14.2 hole, and the
+  switch rattles instead of clipping.
+
+Both are off in a direction that breaks the joint, and they are off the *opposite*
+way, so there is no single number that suits both routes. Before committing to
+18 switch positions, cut one coupon carrying holes at **13.8 / 13.9 / 14.0 / 14.1
+/ 14.2 / 14.3 / 14.4 mm** in the real material at the real settings, and clip a
+real switch into each. Use the smallest hole the switch clips into cleanly and
+cannot be pulled out of by hand, then apply that offset to `mx_cut`.
+
+This is a ten-minute job that de-risks the whole board. Getting it wrong is not
+recoverable on a printed tile — the hole is in the middle of a 250 mm part.
+
+The corner radius is satisfied by both processes without doing anything: FDM
+leaves roughly a nozzle-radius (~0.2 mm) inside corner and a laser leaves a
+sharp one, and the spec is a maximum.
+
 ### Fitting the switches — order matters
 
 All 18 switches clip in from **above**: the housing lands on the plate, the

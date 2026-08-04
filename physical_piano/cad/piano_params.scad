@@ -61,27 +61,44 @@ post_w         = 2;  // hinge post thickness — must fit the 5 mm inter-key gap
 post_len       = 9;
 
 // ---------------- MX switch ----------------
-// ALL VALUES BELOW ARE FROM THE DATASHEET, not estimated:
+// EVERY VALUE IN THIS BLOCK IS READ OFF THE DATASHEET, not estimated:
 //   Kailh CPG1511F01S04-1 "Red Shaft", doc KH-PS1706-10 rev B
 //   -> ../docs/datasheets/kailh_CPG1511F01S04-1_red.pdf
-// Where the datasheet gives a tolerance, the WORST CASE is used for checks.
-mx_cut       = 14.0;   // plate cutout. Body through plate is 13.95 +/-0.05,
-                       // so 14.0 is the correct hole — never cut it undersize.
-mx_plate_th  = 1.5;    // thickness the clips grip — mandatory
-mx_travel    = 3.6;    // TT total travel, +/-0.3  -> worst case MIN 3.3
+// The section it comes from is named on each line, so any of these can be
+// re-checked in one look. Where a tolerance is given the WORST CASE is used.
+// Values that are NOT from the datasheet live in the two blocks below this
+// one — do not add estimates here.
+//
+// s.5  = Profile Dimensions (p.3)
+// s.10 = Loading Parameter Specification + Metal Frame Cutout (p.10)
+
+// s.10 "Metal Frame Cutout Dimensions" specifies the PLATE HOLE directly:
+// 14.00 +/-0.05 square, corners R0.30 max, in 1.50 +/-0.1 material. So this is
+// not inferred from the 13.95 body width — it is the manufacturer's own plate
+// spec, and the two agree.
+mx_cut       = 14.0;   // s.10  plate cutout, 14.00 +/-0.05
+mx_cut_r_max = 0.30;   // s.10  max corner radius of that cutout
+mx_plate_th  = 1.5;    // s.10  1.50 +/-0.1 — the thickness the clips grip
+mx_travel    = 3.6;    // s.10  TT total travel, 3.60 +/-0.3 -> worst MIN 3.3
 mx_travel_tol = 0.3;
-mx_actuate   = 1.8;    // PT actuation travel, +/-0.3 -> worst case MAX 2.1
+mx_actuate   = 1.8;    // s.10  PT pretravel,   1.80 +/-0.3 -> worst MAX 2.1
 mx_actuate_tol = 0.3;
-mx_stem_h    = 11.20;  // stem top above the mounting plate (datasheet profile)
-mx_cross_h   = 3.80;   // keycap cross post height. This is ALL the engagement
-                       // a keycap can ever get, and it sits at the TOP of the
-                       // stem: the cross spans stem_top_z - 3.80 .. stem_top_z.
-                       // A socket placed above stem_top_z grips nothing.
-mx_riser_h   = 4.5;    // plate top height above the base plate top
-mx_lower_h   = 5.00;   // lower housing, plate underside downwards
-mx_pin_h     = 1.40;   // pins below that
+// s.10 OT: the travel guaranteed to remain BEYOND the operating point. Since
+// TT = PT + OT, this rules out the corner the checks below assume — a switch
+// cannot both actuate as late as 2.1 and bottom out as early as 3.3, because
+// that would leave OT = 1.2. Designing against both extremes at once is
+// therefore conservative, which is deliberate. Do not "recover" the margin.
+mx_overtravel = 1.30;  // s.10  OT, minimum
+mx_stem_h    = 11.20;  // s.5   stem top above the mounting plate
+mx_cross_h   = 3.80;   // s.5   keycap cross post height. This is ALL the
+                       //       engagement a keycap can ever get, and it sits
+                       //       at the TOP of the stem: the cross spans
+                       //       stem_top_z - 3.80 .. stem_top_z. A socket
+                       //       placed above stem_top_z grips nothing.
+mx_lower_h   = 5.00;   // s.5   lower housing, plate underside downwards
+mx_pin_h     = 1.40;   // s.5   pins below that
 mx_below_plate = mx_lower_h + mx_pin_h;   // 6.4 below the plate
-mx_body_h    = 10.70;  // whole body, stem and pins excluded
+mx_body_h    = 10.70;  // s.5   whole body, stem and pins excluded
 mx_housing_h = mx_body_h - mx_lower_h;    // 5.70 of housing ABOVE the plate
 
 // The top flange is RECTANGULAR, not square, and the switch is lowered between
@@ -90,16 +107,31 @@ mx_housing_h = mx_body_h - mx_lower_h;    // 5.70 of housing ABOVE the plate
 // switch then only went in turned 90 degrees, with 0.55 mm per side on a
 // printed part and nothing in the model saying so. stop_clear is now 17.0 and
 // it fits either way round.
-mx_housing_w = 15.60;  // top flange, WIDE axis
-mx_housing_d = 13.90;  // top flange, NARROW axis
-mx_clip_w    = 14.87;  // clips at full width, below the plate
+mx_housing_w = 15.60;  // s.5  top flange, WIDE axis
+mx_housing_d = 13.90;  // s.5  top flange, NARROW axis
+mx_clip_w    = 14.87;  // s.5  clips at full width below the plate, +/-0.5, so
+                       //      worst case 15.37 — this is what the relief under
+                       //      the plate has to clear, not the 13.95 body
+
+// ---------------- OUR CHOICE, not the switch's ----------------------------
+mx_riser_h   = 4.5;    // how high we stand the switch plate above the base
+                       // plate. Nothing in the datasheet asks for this; it is
+                       // set so the stack lands on the shared heights below.
 
 // ---------------- NOT dimensioned on the datasheet — MEASURE THESE ---------
-// Both were scaled off the profile drawing (+/- ~0.3 mm) and both gate the
-// black keys. Put calipers on a real switch before committing to a print.
+// The datasheet DRAWS all four of these but never dimensions them. The figures
+// here were scaled off the s.5 top view against the known 15.60 mm width, so
+// treat them as +/-0.15 mm at best. All four gate the black keycap, which is
+// the one part that grips the switch rather than merely clearing it.
 mx_well_w     = 7.0;   // housing opening the stem slides through. Caps how fat
                        // the black keycap's lower boss may be (blk_boss_w).
 mx_shoulder_w = 6.6;   // stem top face — what the keycap seats on
+// The cross scales to 4.0 mm across with arms of ~1.27 and ~1.10 mm. It is
+// NOT symmetric — that matches the usual MX figures of 1.35 and 1.15 — so a
+// square socket has real clearance on one axis and almost none on the other.
+mx_cross_w    = 4.0;   // cross span, both arms
+mx_cross_th   = 1.35;  // THICKER arm. The thin one is ~1.15; sizing the socket
+                       // to the thick arm is what makes it fit both.
 
 // ---------------- Stops ----------------
 // The hard bottom stop for the white keys. Both routes build it: the printed
@@ -176,9 +208,19 @@ blk_switch_x = key_len - black_len/2;   // 96.6, the cap's centroid
 
 // MX keycap mount: the black keycap pushes straight onto the switch stem, the
 // way any keyboard keycap does. No lever, no separate return spring.
-mx_mount_cross = 4.2;   // cross arm span, with clearance
-mx_mount_th    = 1.35;  // cross arm thickness
-mx_mount_depth = 4.0;   // how deep the cap socket swallows the stem
+//
+// Sized FROM the cross plus an explicit clearance, so the two numbers that are
+// measurements and the two that are fit allowances stay visibly separate. The
+// socket used to be a bare 4.2 x 1.35 with no stated origin, and 1.35 is the
+// thick arm's own size — nominally zero clearance, on a printed part, where
+// FDM narrows a slot like this by a further 0.1-0.2 mm. It would not have gone
+// on without force, and the post wall around it is only 0.65 mm.
+mx_mount_clr   = 0.2;   // per-axis clearance, printed socket over moulded cross
+mx_mount_cross = mx_cross_w  + mx_mount_clr;   // 4.2
+mx_mount_th    = mx_cross_th + 0.1;            // 1.45
+mx_mount_depth = 4.0;   // socket deeper than mx_cross_h (3.80) on purpose, so
+                        // the cap seats on the stem SHOULDER and not on the
+                        // tip of the cross
 
 // Black keys are pressed by hand, never by the robot (fingers land at
 // contact_x = 35, well forward of front_clear). They therefore need NO stop
@@ -303,3 +345,20 @@ if (blk_step_z - housing_top_z < blk_travel)
 if (blk_boss_w >= mx_well_w)
     echo("*** WARNING: black keycap boss ", blk_boss_w, " will not enter the ",
          mx_well_w, " mm housing opening — the key will jam short of actuation ***");
+// The clips spring out to mx_clip_w +/-0.5 once through the plate. The relief
+// under the plate has to clear the WORST CASE, or they never latch.
+if (mx_cut + 2 < mx_clip_w + 0.5)
+    echo("*** WARNING: relief under the plate is ", mx_cut + 2, " but the clips ",
+         "reach ", mx_clip_w + 0.5, " worst case — they cannot latch ***");
+// The socket must be at least as big as the cross in both axes, or the black
+// keycap will not go on at all.
+if (mx_mount_cross <= mx_cross_w || mx_mount_th <= mx_cross_th)
+    echo("*** WARNING: keycap socket ", mx_mount_cross, " x ", mx_mount_th,
+         " is not larger than the cross ", mx_cross_w, " x ", mx_cross_th, " ***");
+// TT = PT + OT, so the two worst cases the checks above use cannot co-occur.
+echo(str("worst-case corner check: PT max ", actuate_max, " forces TT >= ",
+         actuate_max + mx_overtravel, ", and TT min ", travel_min,
+         " forces PT <= ", travel_min - mx_overtravel,
+         " — press ", mx_press, " clears both by >= ",
+         min(mx_press - (travel_min - mx_overtravel),
+             (actuate_max + mx_overtravel) - mx_press)));
