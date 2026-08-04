@@ -84,11 +84,14 @@ section = true;   // Cut away the NEAR half (y < 0). Leave this ON for the front
                   // shoulder, which reads as contact when the two are 12 mm
                   // apart in y and never touch.
 
-module cut() {
+// `plane` is the y the section is taken on — it has to follow the part being
+// checked. A white key sits at y = 0, a black key at y = -pitch/2, and a cut
+// fixed at 0 simply deletes the black key instead of sectioning it.
+module cut(plane = 0) {
     if (section)
         difference() {
             children();
-            translate([-60, -90, -40]) cube([320, 90, 140]);
+            translate([-60, plane - 90, -40]) cube([320, 90, 140]);
         }
     else children();
 }
@@ -136,6 +139,6 @@ module check_fit_slice() {
 }
 
 if      (mode == "switch")    mx_switch(press, sw_rot);
-else if (mode == "white")     cut() check_white();
-else if (mode == "black")     cut() check_black();
+else if (mode == "white")     cut(0)         check_white();
+else if (mode == "black")     cut(-pitch/2)  check_black();
 else if (mode == "fit_slice") check_fit_slice();

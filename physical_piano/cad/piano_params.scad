@@ -141,9 +141,10 @@ black_len    = key_len * 0.62;   // 86.8, occupies the REAR
 black_rise   = 10;
 black_stem_w = 3.6;
 blk_cap_th   = 5;
-blk_web_x0   = 62;
-blk_web_x1   = 120;   // stops short of the hinge posts
-blk_groove_d = 3;
+// blk_web_x0 / blk_web_x1 / blk_groove_d used to describe the web that dropped
+// into a glued groove. Black keys have been switched keycaps for a while and
+// nothing referenced them any more, so they are gone rather than left here
+// describing a design that no longer exists.
 front_clear  = key_len - black_len;   // 53.2 — fingers must contact inside this
 
 // ---------------- Black keys are SWITCHED, not decorative -------------
@@ -156,7 +157,22 @@ blk_notch    = 7.5;   // how much a white key narrows on each black-key side
 blk_notch_x0 = front_clear;  // notch starts where the black keys start
 blk_notch_x1 = 122;   // ...and stops before the hinge knuckle, which needs
                       // its full 45 mm width to locate the key on the pin
-blk_switch_x = 75;    // black key switch position along the key
+// WHERE THE STEM SITS UNDER THE CAP. The single MX stem is the black key's
+// only support, so this one number decides both how far the key tilts under an
+// off-centre press and whether it hangs level at rest at all.
+//
+// It was 75: 21.8 mm behind the cap's front edge but 65 mm ahead of its back.
+// That put the cap's own weight ~22 mm BEHIND the stem, so the key sat
+// nose-up under nothing but gravity, and a press on the back end applied three
+// times the moment of a press on the front.
+//
+// Under the cap's CENTROID the static bias is zero and the worst-case press
+// moment drops from 65 mm of arm to 43.4. The trade is real and worth knowing:
+// a press near the FRONT now has a 43 mm arm instead of 22, so the typical
+// press is worse while the worst press is better and neither end is
+// unbounded. A 87 mm keycap on one stem really wants a stabiliser — this is
+// the best a single stem can do.
+blk_switch_x = key_len - black_len/2;   // 96.6, the cap's centroid
 
 // MX keycap mount: the black keycap pushes straight onto the switch stem, the
 // way any keyboard keycap does. No lever, no separate return spring.

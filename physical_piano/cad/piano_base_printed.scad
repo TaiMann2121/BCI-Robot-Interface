@@ -132,7 +132,7 @@ module cell_feet() {
 // nothing to put in them.
 module dowel_holes() {
     // x positions clear of the switch cavity (25-45), the black key socket
-    // (65-85) and the hinge posts (122.5-131.5)
+    // (87.6-105.6) and the hinge posts (122.5-131.5)
     for (x = [12, 137])
         translate([x, 0, -1]) cylinder(h = base_th + 2, d = pin_d);
 }
@@ -247,7 +247,7 @@ module mx_cuts() { switch_cuts(0); }
 // "assembly"  one cell + one key + one black key, for checking fit up close
 // "base"      one bare base cell
 // "tile"      one printable tile -> set tile_i and print all 3
-mode   = "assembly";
+mode   = "full";
 tile_i = 0;      // which tile to render: 0, 1 or 2. Cells and seam-safety are
                  // set by tile_first / tile_last near the top of this file.
 
