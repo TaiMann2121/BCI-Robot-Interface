@@ -424,15 +424,24 @@ line by line.
 
 **Nothing else should be fabricated until the three items below are closed.**
 All three need a physical switch in hand, and all three close in one bench
-session once one arrives — so the blocking action is *order the switches*.
+session. **The switches are ordered** (Adafruit #4952 × 2 packs, 20 pcs,
+2026-08-04), so the blocking action is now simply *wait for delivery, then do
+the bench session*.
 
-1. **Confirm the switch you buy is the switch the CAD was designed to.**
-   The BOM points at Adafruit #4952 (Kailh linear red); the datasheet in
-   `datasheets/` is Kailh **CPG1511F01S04-1**. MX-compatible parts agree on the
-   14 mm plate cutout and the 15.60 mm flange, but housing height above the
-   plate varies between makers — and that height is exactly what gives the
-   black keycap its 1.7 mm of free travel. If the part differs, get its
-   datasheet and re-check `mx_housing_h` before anything else.
+1. **Confirm the delivered switch is the switch the CAD was designed to.**
+   The order is Adafruit #4952 (Kailh linear red); the datasheet in
+   `datasheets/` is Kailh **CPG1511F01S04-1**. Nothing has ever tied those two
+   together — the part number on the packaging is the check.
+
+   What does *not* matter: plate-mount vs PCB-mount. The five-pin variant's two
+   extra fixation posts sit inside the body footprint, and the bore under the
+   plate is a 16 mm open hole in both routes, so either clips in fine.
+
+   What *does* matter: **housing height above the plate**, `mx_housing_h`
+   = 5.70 mm. MX-compatible parts agree on the 14 mm cutout and the 15.60 mm
+   flange, but this one varies between makers, and it is exactly what gives the
+   black keycap its 1.7 mm of free travel before its boss reaches the housing.
+   If the part differs, get its datasheet and re-check that number first.
 
 2. **Measure `mx_well_w` and `mx_shoulder_w`** (currently 7.0 and 6.6).
    The datasheet draws the housing opening and the stem top face but never

@@ -8,6 +8,35 @@ at checkout. Links point to reputable distributors; equivalents are fine.
 
 ---
 
+## Order status — placed 2026-08-04
+
+Ordered by the supervisor (from `Physical_Piano_BOM.docx`, highlighted rows):
+
+**Switches** Adafruit #4952 × 2 packs (20 pcs) · **Arduino** Uno R3, official ·
+**Sound** enclosed piezo #1739 · **Wiring** breadboard #239, USB A–B #62,
+hookup wire #3111, perfboard #1606 · **Mechanical** K&S 3 mm brass rod 3-pack
+*and* the longer McMaster 3 mm stainless (2 ft), M3 assortment kit, CA glue.
+
+**Not ordered — check before you need them:**
+
+| Item | Why it might matter |
+|------|---------------------|
+| Soldering iron kit | Not highlighted — presumably already in lab stock. Confirm before the perfboard stage. |
+| M3 standoffs, 12 mm | **Laser route only.** Needed if that route is chosen; the printed route's feet are integral. |
+
+**Two notes on what *was* ordered:**
+
+- The **M3 kit is a laser-route part in practice.** `piano_base_printed.scad`
+  has no bolt holes anywhere — its tiles register on 3 mm dowels and are glued.
+  The laser route uses M3 in 27 places. If the printed route is chosen the kit
+  goes spare, unless seam bolt holes are added to the CAD first.
+- **Both rod lengths are useful, and you need both if the route is still open.**
+  The printed route wants three tile-length pieces (250 / 200 / 100 mm), which
+  the 300 mm K&S rods cover. The laser route wants ONE continuous pin —
+  581 mm — which only the 2 ft McMaster rod covers.
+
+---
+
 ## 1. Key switches
 
 ### ✅ CHOSEN: mechanical keyboard switches (MX-style linear)
@@ -73,10 +102,10 @@ the no-solder screw-terminal option below is a durable middle ground.
 | 1 | Hookup wire, 22 AWG stranded, 6 colors — 18 signals + ground | ~$15 | [Adafruit #3111](https://www.adafruit.com/product/3111) · [SparkFun](https://www.sparkfun.com/hook-up-wire-assortment-stranded-22-awg.html) |
 | 1 | Perfboard / prototyping board | ~$11 | [Adafruit #1606](https://www.adafruit.com/product/1606) — final build |
 | 1 | Beginner soldering iron kit (iron, stand, solder, sucker, wick) | ~$20 | [Amazon — LCDalternatives kit](https://www.amazon.com/Beginner-Soldering-LCDalternatives-v3-solder/dp/B00SH2MOB6) |
-| 1 pack | K&S 3 mm brass rod, 3-pack (300 mm each) — hinge pin | ~$8 | [Amazon](https://www.amazon.com/Round-Brass-Rod-Diameter-Engineering/dp/B013Y2EACO) — the laser route uses one continuous ~570 mm pin, so butt two rods at a bracket |
-| 1 | M3 nut/bolt/washer assortment kit | ~$12 | [Amazon](https://www.amazon.com/Assortment-Stainless-Washers-Assorted-Machine/dp/B0BC24J6SS) |
+| 1 pack | K&S 3 mm brass rod, 3-pack (300 mm each) — hinge pin | ~$8 | [Amazon](https://www.amazon.com/Round-Brass-Rod-Diameter-Engineering/dp/B013Y2EACO) — 300 mm covers the printed route's per-tile pins. The laser route needs one continuous 581 mm pin: use the [2 ft McMaster 3 mm stainless](https://www.mcmaster.com/products/rods/diameter~3-mm/stainless-steel-4~/system-of-measurement~metric/length~24/length~2-ft/) rather than butting two rods at a bracket |
+| 1 | M3 nut/bolt/washer assortment kit — **laser route**; the printed base has no bolt holes | ~$12 | [Amazon](https://www.amazon.com/Assortment-Stainless-Washers-Assorted-Machine/dp/B0BC24J6SS) |
 | 6 | M3 standoffs, 12 mm — **laser route only**; the printed route has feet built into the base cells | ~$9 | [Amazon](https://www.amazon.com/Hilitchi-Female-Standoff-Assortment-Motherboard/dp/B01LZ6PXCY) |
-| 1 | Gorilla super glue (cyanoacrylate) | ~$7 | [Amazon](https://www.amazon.com/Gorilla-Super-Glue-Gram-Clear/dp/B00KPYB05A) — gluing black keys into locating grooves |
+| 1 | Gorilla super glue (cyanoacrylate) | ~$7 | [Amazon](https://www.amazon.com/Gorilla-Super-Glue-Gram-Clear/dp/B00KPYB05A) — **printed route: tile seams only. Do NOT glue the black keys** — they are keycaps that push onto a switch stem and must come off again |
 
 **No-solder alternative** — skip the perfboard + soldering kit above and use
 this instead:
