@@ -78,16 +78,27 @@ Go to **HH C124** and talk to Jen Hitchcock. Bring the CAD and these questions:
      argument holds at all. The pitch accuracy above is the real reason.
 
    A worked layered design already exists at
-   [`../cad/piano_base_laser.scad`](../cad/piano_base_laser.scad): four flat layers
-   (base / spacer / switch plate / stop rail) whose thicknesses land the switch
-   plate at z=12 mm and the stop at z=25 mm — identical to the printed version,
-   so key height and arm height are unchanged. Only 22 small hinge blocks stay
-   printed, because they need a cross-drilled pin hole a laser can't make.
+   [`../cad/piano_base_laser.scad`](../cad/piano_base_laser.scad): **three** flat
+   layers — structure **9.0 mm**, switch plate **1.5 mm**, stop rail
+   **13.0 mm** — whose thicknesses land the switch plate top at **z = 10.5 mm**
+   and the stop top at **z = 23.5 mm**, identical to the printed route, so key
+   height and arm height are unchanged either way. Only **12** small hinge
+   brackets stay printed, because they need a cross-drilled pin hole a laser
+   cannot make. (An earlier version had a fourth "spacer" layer and 22
+   brackets; the spacer had no remaining job once the structural layer was
+   drilled through under every switch, and there is one bracket per key
+   boundary, which is 12.)
 
    Specifics to confirm: **can the bed take 545 mm**, and can they supply
-   **~1.5 mm stock** (the thickness MX switches clip into)? If 1.5 mm is too
+   **1.5 mm stock** (the thickness MX switches clip into — this one is
+   mandatory, not a preference) plus 9.0 mm and 13.0 mm? If 1.5 mm is too
    flimsy over that span, is a stepped two-layer plate (1.5 mm with 14 mm holes
    over a thicker backing with clearance holes) feasible?
+
+   Also ask about **kerf compensation**: the switch cutout is specified
+   14.00 ±0.05 mm and an uncompensated cut comes out ~0.2 mm oversize, which is
+   the difference between a switch that clips and one that rattles. See the
+   test-coupon step in BUILD.md.
 4. **Tile joining.** The base cells carry alignment dowel half-holes at the
    two tile seams, so a seam closes onto a 3 mm rod rather than being butted
    by eye. Worth asking whether they would also glue or pin the seam, since
@@ -97,10 +108,23 @@ Go to **HH C124** and talk to Jen Hitchcock. Bring the CAD and these questions:
 5. Turnaround time and how billing works against our lab's oracle string.
 
 ### Phase 2 — Prototype ONE key
-Print **1 white key + 1 base cell + 1 black key** (~$30 of material) and check:
 
+**Before this:** cut a hole-size coupon and set `mx_cut` from it, and put
+calipers on a real switch for `mx_well_w` / `mx_shoulder_w`. Both are in
+BUILD.md → "Open items". A switch that will not clip in makes every other
+question on this list unanswerable.
+
+Print **1 white key + 1 base cell + 1 black key** (~$30 of material) —
+`mode = "assembly"` in `piano_base_printed.scad` is exactly that trio — and
+check:
+
+- Does the switch clip into the plate and stay there when pulled by hand?
 - Does the key pivot freely and return cleanly?
 - Does the switch actuate before the cap hits the bottom stops?
+- Does the cap land on the **stop shoulders**, not on the switch? (Press hard —
+  the whole point is that the frame takes the robot's overshoot.)
+- Does the black keycap grip its cross, and travel its full 3.6 mm without
+  fouling the switch housing?
 - Do the robot's fingers land in the **front clear zone** (see below)?
 - Is the key-top height reachable by the arm's vertical adjustment?
 
@@ -179,8 +203,9 @@ So Route B is **3 laser parts + 30 printed parts**, drawn from **two** files.
   or the hinge bracket (`piano_base_laser.scad`).
 - This document, for the manifest, build volumes, and material context.
 
-*We don't have OpenSCAD on the lab PC yet — it's a free download, or TechSpark
-staff can help with file prep as part of professional services.*
+*OpenSCAD is installed on the lab PC. Open any `cad/*.scad` file, set `mode`,
+press F6, then File > Export. TechSpark staff can help with file prep as part of
+professional services if needed.*
 
 ---
 
@@ -191,9 +216,19 @@ key, so fingers must press in the front 53.2 mm. Measured on the rig: the
 fingertip lands **35 mm** from the front edge. Comfortably clear, no
 repositioning needed.
 
-⏳ **Base construction — depends on consult question 3.** If laser-cutting the
-switch plate is approved, the base is redesigned from printed 50 mm cells into a
-stack of flat laser-cut layers, and only the key levers and black keys stay 3D
-printed. **Do not start that rework until TechSpark confirms bed size and
-material** — and do not commit to the printed-tile base until question 3 is
-answered either way.
+⏳ **Base construction — still a choice, no longer a rework.** BOTH routes are
+now fully modelled: `piano_base_printed.scad` (3 tiles, 5 + 4 + 2 cells) and
+`piano_base_laser.scad` (3 flat layers + 12 printed brackets). Picking one is a
+decision, not a redesign. The laser route cuts all 11 switch positions in ONE
+operation, so the 50 mm pitch the arm is calibrated to has no glued seams to
+drift across, and it is far cheaper in material; the printed route needs no
+laser. **Confirm laser access and 9.0 / 1.5 / 13.0 mm stock before committing.**
+They are alternatives — do not build both.
+
+⏳ **Switch fit — not yet verified against hardware.** Every dimension the CAD
+takes from the switch datasheet has been checked line by line, but three things
+cannot be settled on paper: whether the switch actually purchased matches the
+datasheet, the two stem dimensions the datasheet draws without dimensioning, and
+whether the fabrication process holds the 14.00 ±0.05 plate cutout. See
+BUILD.md → "Open items". **Nothing should be fabricated in quantity until these
+close.**

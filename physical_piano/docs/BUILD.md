@@ -418,6 +418,49 @@ thickness as a free design parameter and match the arm height to it:
 
 ## Open items
 
-- *(none blocking)* — geometry, sound, and press force are all measured and the
-  switch spec is set. Next physical steps: order the BOM, 3D-print the keys/hinge
-  mechanism, bench-test firmware + tuner, then integrate under the arm.
+Settled: geometry, sound, press force, the switch spec, and the CAD. Every
+figure the model takes from the switch datasheet has been checked against it
+line by line.
+
+**Nothing else should be fabricated until the three items below are closed.**
+All three need a physical switch in hand, and all three close in one bench
+session once one arrives — so the blocking action is *order the switches*.
+
+1. **Confirm the switch you buy is the switch the CAD was designed to.**
+   The BOM points at Adafruit #4952 (Kailh linear red); the datasheet in
+   `datasheets/` is Kailh **CPG1511F01S04-1**. MX-compatible parts agree on the
+   14 mm plate cutout and the 15.60 mm flange, but housing height above the
+   plate varies between makers — and that height is exactly what gives the
+   black keycap its 1.7 mm of free travel. If the part differs, get its
+   datasheet and re-check `mx_housing_h` before anything else.
+
+2. **Measure `mx_well_w` and `mx_shoulder_w`** (currently 7.0 and 6.6).
+   The datasheet draws the housing opening and the stem top face but never
+   dimensions them; both were scaled off the s.5 top view and are ±0.15 mm at
+   best. They cap how fat the black keycap's lower boss may be, and if the boss
+   does not enter the housing opening the black keys jam ~0.4 mm short of
+   actuation. `piano_params.scad` warns if the numbers stop working.
+
+3. **Cut a hole-size test coupon and set `mx_cut` from it.** See "Cut a
+   hole-size test coupon FIRST" above. The datasheet's 14.00 ±0.05 is tighter
+   than either fabrication process holds, and the two miss it in opposite
+   directions. This is the single cheapest way to de-risk 18 switch positions.
+
+Also open, and needed before the base is fabricated (though not before the keys
+are):
+
+4. **Choose the route — printed or laser.** They are alternatives; do not build
+   both. The laser route cuts all 11 switch positions in one operation, so the
+   50 mm pitch the arm is calibrated to has no seams to drift across, and it is
+   far cheaper in material. The printed route needs no laser but puts two glued
+   joints in that same dimension (the 5 + 4 + 2 tiling keeps both seams off a
+   black key) and runs ~500 g of PLA. Needs a TechSpark conversation about
+   laser access and 9.0 / 1.5 / 13.0 mm stock.
+
+Then: print **one** cell, one key lever and one black key — `mode = "assembly"`
+in `piano_base_printed.scad` is exactly that trio — and check by hand that the
+switch clips in, the key pivots on the rod, the cap lands on the stops rather
+than the switch, and the black cap grips its cross and travels without fouling
+the housing. That exercises every failure mode found so far in one part instead
+of thirty. Only then commit to the full run, and to bench-testing firmware +
+tuner and integrating under the arm.
