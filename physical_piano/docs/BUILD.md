@@ -24,7 +24,7 @@ exactly 5.0 cm from the next (4.5 cm key + 0.5 cm gap) so the arm's key-step
 lines up. This pitch is ~1.97″, which is why the earlier "2-inch key-step"
 calibration still worked — only the key-width/gap split was mis-specified.
 
-### Black keys (decorative)
+### Black keys (switched)
 
 Per supervisor: include the black keys **and make them pressable**, even though
 the task never uses them. Geometry mirrors the simulator exactly
@@ -228,10 +228,13 @@ PC listener is set up, but it is not part of the finished instrument.*
   the arm's working height. Total ~54.5 cm (21.5″) wide; confirm it fits inside
   the arm's reachable travel before cutting.
   **Must be tiled:** TechSpark's printers have a 254 mm build volume, so the
-  545 mm keybed prints as 3 tiles (5 + 5 + 1 cells) and is joined — the CAD's
-  `"tile"` mode generates these.
-- **Black keys (7×, print):** decorative risers that drop into locating grooves
-  at the white-key boundaries and are glued. No switches, no wiring.
+  545 mm keybed prints as 3 tiles (5 + 4 + 2 cells) and is joined — the CAD's
+  `"tile"` mode generates these, one per `tile_i` value. The split avoids
+  putting a seam on a black-key boundary, where the joint would cut through a
+  switch socket.
+- **Black keys (7×, print):** switched keycaps that push straight onto an MX
+  stem at the white-key boundaries. Not glued, and not decorative — they are
+  wired like the white keys.
 
 ## Purchasing & fabrication
 
@@ -339,6 +342,29 @@ reaches the stem against a 45 gf requirement — a huge margin the right way.
 > and self-trigger. At ~20% infill (16 g → 9.9 gf) there is a 1.5× margin. The
 > CAD warns if `key_mass_g` exceeds the limit.
 
+### Fitting the switches — order matters
+
+All 18 switches clip in from **above**: the housing lands on the plate, the
+13.95 mm neck passes the 1.5 mm plate, and the clips spring out into the 16 mm
+relief below (they reach 14.87 mm at full width). The body and pins end 2.6 mm
+above the board underside, inside the bore, so they are soldered from below —
+the feet leave 12 mm to work in.
+
+**Fit every switch before any key lever goes on.** Once a lever is on the pin
+you cannot reach the stop shoulders, and the black-key sockets sit in gaps the
+white keys overhang. The order is:
+
+1. join the three tiles (printed route) or bolt up the layer stack (laser route)
+2. clip in all 18 switches
+3. solder the harness from underneath
+4. drop in the 11 levers and thread the hinge rod
+5. push the 7 black keycaps onto their stems — last
+
+On the printed route, thread the hinge rod as **three tile-length pieces**, not
+one 570 mm rod. A single rod has to pass 23 collinear bores across two glued
+seams; per-tile pieces only have to agree within one printed part. (The laser
+route can use one rod — every bracket bolts to the same flat sheet.)
+
 ## Keyboard height & arm integration
 
 The toy mat modeled key **width and length** well, but as a flat mat (~1 cm above
@@ -347,8 +373,11 @@ instrument will be taller. This is not a problem because the **hand+arm height i
 adjustable** — the current mounting height is not fixed. So treat keyboard
 thickness as a free design parameter and match the arm height to it:
 
-1. The key/switch/hinge/stop stack is now fixed: key tops sit **42.5 mm**
-   above the table (30.5 mm of board on 12 mm feet). Call this **K**.
+1. The key/switch/hinge/stop stack is now fixed: key tops sit **42.6 mm**
+   above the table (30.6 mm of board on 12 mm feet). Call this **K**.
+   (Was 42.2 mm: the pivot rose 0.37 mm when the stop height was corrected —
+   see `stop_r_lead` in `piano_params.scad`. The CAD echoes the live figure on
+   every render; take **K** from there, not from this line.)
 2. Raise the arm so the **resting fingertip hovers ~2–5 mm above the key tops**
    (small positive clearance so a resting finger never holds a key down).
 3. The **~3 cm stroke** then presses the key: only ~0.5–1 cm of key throw is

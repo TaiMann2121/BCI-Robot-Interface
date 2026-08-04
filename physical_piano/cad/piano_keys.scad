@@ -63,8 +63,19 @@ module key_lever(idx = -1) {
         // switch has room. Real piano white keys are shaped the same way, and
         // for the same reason. The notch stops at blk_notch_x1 so the hinge
         // knuckle keeps its full width.
-        if (is_black(idx))     notch( 1);
-        if (is_black(idx - 1)) notch(-1);
+        //
+        // WHICH SIDE: both base files lay key 0 out at HIGH y and count DOWN
+        // (slot_y() and key_y() both DECREASE with the index), so key idx+1 is
+        // the -y neighbour of key idx. is_black(idx) is the boundary between
+        // idx and idx+1, which therefore sits at -y; is_black(idx-1) sits at
+        // +y. These were swapped: the result was a notch cut at every boundary
+        // WITHOUT a black key, while the real black-key boundaries got only a
+        // one-sided 7.5 mm notch instead of the full 15 mm the switch needs.
+        if (is_black(idx))     notch(-1);
+        if (is_black(idx - 1)) notch( 1);
+        // Cut LAST and at this level, so it passes through the rails and cap
+        // as well as the knuckle — see pin_bore().
+        pin_bore();
     }
 }
 
@@ -80,21 +91,39 @@ module notch(side) {
 // the key has to swing freely. Its width (knuckle_wid) is what stops the key
 // sliding sideways along the pin.
 module knuckle() {
-    difference() {
-        translate([0, -knuckle_wid/2, 0])
-            rotate([-90, 0, 0]) cylinder(h = knuckle_wid, d = knuckle_boss_d);
-        translate([0, -knuckle_wid/2 - 1, 0])
-            rotate([-90, 0, 0]) cylinder(h = knuckle_wid + 2, d = pin_d);
-    }
+    translate([0, -knuckle_wid/2, 0])
+        rotate([-90, 0, 0]) cylinder(h = knuckle_wid, d = knuckle_boss_d);
+}
+
+// The hinge pin bore. Subtracted at the KEY_LEVER level, NOT inside knuckle().
+//
+// The side rails run the full length of the key and stand exactly where this
+// bore has to come out. Cut inside knuckle(), the bore was drilled before the
+// rails were unioned on, so the rails plugged both ends: a blind 39 mm pocket
+// across a 45 mm key, sealed by 3 mm of rail at each side. The pin rod could
+// not be threaded through the key at all, and the lever rendered as two
+// volumes — a solid plus a sealed internal cavity — instead of one.
+//
+// Cutting it here takes it through the rails and the cap as well. It leaves
+// 2.3 mm of cap over the bore and 4.3 mm of rail under it.
+module pin_bore() {
+    translate([pivot_x, -key_w/2 - 1, pivot_z])
+        rotate([-90, 0, 0]) cylinder(h = key_w + 2, d = pin_d);
 }
 
 module plunger() {
     // Stubby post hanging from the cap underside that pushes the MX stem down.
     // It passes between the base's stop shoulders; the CAP UNDERSIDE is what
     // lands on them, so the switch never takes the overshoot.
+    //
+    // The +0.1 buries it in the cap. Without it the plunger's top face and the
+    // cap's underside are the same plane, and a face-to-face contact is not a
+    // union: CGAL reports the lever as TWO volumes and the plunger slices as a
+    // loose cylinder. The side rails above already do this; the plunger did
+    // not. Only the tip position matters dimensionally, and that is unchanged.
     tip_d = 4;
     translate([0, 0, under_rest - plunger_len])
-        cylinder(h = plunger_len, d = tip_d);
+        cylinder(h = plunger_len + 0.1, d = tip_d);
 }
 
 // =====================================================================
@@ -111,6 +140,17 @@ module plunger() {
 // It travels straight down while the white keys pivot. Slightly different feel,
 // but the black keys are never pressed by the robot, and a lever here would
 // collide with the hinge brackets that share the same 5 mm gap.
+// The post is STEPPED, and both steps are load-bearing decisions:
+//
+//   blk_socket_z .. blk_step_z   a slim round boss (blk_boss_w) that follows
+//                                the stem down INTO the housing opening, the
+//                                way a real keycap's does
+//   blk_step_z   .. cap_under    the full-width post
+//
+// It starts at blk_socket_z — the BASE of the cross, not the top of the stem.
+// This post used to start at stem_top_z with the socket cut upwards from
+// there, which put the whole 3.80 mm cross below the socket: the cap sat on
+// the tip of the stem with nothing gripping it. See piano_params.scad.
 module black_key() {
     cap_under = black_top_z - blk_cap_th;
     post_w    = mx_mount_cross + 2.4;      // socket plus wall
@@ -119,12 +159,18 @@ module black_key() {
             // cap
             translate([key_len - black_len, -black_w/2, cap_under])
                 cube([black_len, black_w, blk_cap_th]);
-            // post down to the switch stem, centred on blk_switch_x
-            translate([blk_switch_x - post_w/2, -post_w/2, stem_top_z])
-                cube([post_w, post_w, cap_under - stem_top_z + 0.1]);
+            // slim lower boss — round so it cannot catch on the corners of the
+            // housing opening, and so it prints without a seam on the socket
+            translate([blk_switch_x, 0, blk_socket_z])
+                cylinder(h = blk_step_z - blk_socket_z, d = blk_boss_w);
+            // full-width post, from clear of the housing up to the cap
+            translate([blk_switch_x - post_w/2, -post_w/2, blk_step_z])
+                cube([post_w, post_w, cap_under - blk_step_z + 0.1]);
         }
-        // MX cross socket in the underside of the post
-        translate([blk_switch_x, 0, stem_top_z - 0.1]) mx_mount();
+        // MX cross socket, opening at the post's bottom face. Cut deeper than
+        // mx_cross_h so the cap seats on the stem SHOULDER (a 6.6 mm face)
+        // rather than bottoming on the tip of the cross.
+        translate([blk_switch_x, 0, blk_socket_z - 0.1]) mx_mount();
     }
 }
 
@@ -147,6 +193,11 @@ mode = "pair";
 if      (mode == "key")   key_lever();
 else if (mode == "black") black_key();
 else if (mode == "pair") {
-    color("white") key_lever();
-    color("black") translate([0, pitch/2, 0]) black_key();
+    // Key 0, which has a black key on its -y side (is_black(0) is true), so
+    // the lever is rendered NOTCHED. It used to pair an un-notched key_lever()
+    // with a black key on the +y side — the one combination that never occurs
+    // on the board, and one where the black key's post drives straight through
+    // the white key. F6 gave it away: the two parts fused into a single volume.
+    color("white") key_lever(0);
+    color("black") translate([0, -pitch/2, 0]) black_key();
 }

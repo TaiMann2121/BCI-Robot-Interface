@@ -45,12 +45,13 @@ contact_x = 35;
 
 // ---------------- Base / pivot ----------------
 base_th   = 6;       // printed base plate thickness
-// Set so stop_top lands at 23.5 (= the laser stack's 9 + 1.5 + 13 mm), giving
-// the 2.7 mm press below. Adjust THIS rather than the stop rail's stock size.
-hinge_h   = 20.2;    // pivot height above the base top
 pin_d     = 3.4;     // hinge pin bore (3 mm rod)
 pivot_x   = key_len - 13;
 clr       = 0.4;     // print clearance for moving mates
+// hinge_h and pivot_z are DERIVED further down, from the stop geometry. They
+// used to be set here by hand (hinge_h = 20.2), which is what let the press
+// the switch actually sees drift 0.3 mm below the nominal mx_press figure —
+// see the note on stop_r_lead.
 
 // Knuckle must nearly fill the span between hinge supports or nothing stops
 // the key sliding along the pin (see the note in piano_keys.scad).
@@ -72,14 +73,49 @@ mx_travel_tol = 0.3;
 mx_actuate   = 1.8;    // PT actuation travel, +/-0.3 -> worst case MAX 2.1
 mx_actuate_tol = 0.3;
 mx_stem_h    = 11.20;  // stem top above the mounting plate (datasheet profile)
-mx_housing_w = 15.60;  // top flange, sits ON the plate — stop rail must clear it
+mx_cross_h   = 3.80;   // keycap cross post height. This is ALL the engagement
+                       // a keycap can ever get, and it sits at the TOP of the
+                       // stem: the cross spans stem_top_z - 3.80 .. stem_top_z.
+                       // A socket placed above stem_top_z grips nothing.
 mx_riser_h   = 4.5;    // plate top height above the base plate top
-mx_below_plate = 6.4;  // 5.00 lower housing + 1.40 pins, below the plate
+mx_lower_h   = 5.00;   // lower housing, plate underside downwards
+mx_pin_h     = 1.40;   // pins below that
+mx_below_plate = mx_lower_h + mx_pin_h;   // 6.4 below the plate
+mx_body_h    = 10.70;  // whole body, stem and pins excluded
+mx_housing_h = mx_body_h - mx_lower_h;    // 5.70 of housing ABOVE the plate
+
+// The top flange is RECTANGULAR, not square, and the switch is lowered between
+// the stop shoulders to reach the plate — so it is the WIDE axis the stop
+// clearance has to swallow. stop_clear was 15.0, which is under 15.60: the
+// switch then only went in turned 90 degrees, with 0.55 mm per side on a
+// printed part and nothing in the model saying so. stop_clear is now 17.0 and
+// it fits either way round.
+mx_housing_w = 15.60;  // top flange, WIDE axis
+mx_housing_d = 13.90;  // top flange, NARROW axis
+mx_clip_w    = 14.87;  // clips at full width, below the plate
+
+// ---------------- NOT dimensioned on the datasheet — MEASURE THESE ---------
+// Both were scaled off the profile drawing (+/- ~0.3 mm) and both gate the
+// black keys. Put calipers on a real switch before committing to a print.
+mx_well_w     = 7.0;   // housing opening the stem slides through. Caps how fat
+                       // the black keycap's lower boss may be (blk_boss_w).
+mx_shoulder_w = 6.6;   // stem top face — what the keycap seats on
+
+// ---------------- Stops ----------------
+// The hard bottom stop for the white keys. Both routes build it: the printed
+// route as shoulders either side of the socket, the laser route as a rail
+// across the board. Sharing the numbers here is what keeps the two agreeing.
+stop_clear = 17.0;   // square hole at each key, clears the 15.60 housing
+stop_width = 4.0;    // stop material either side of that hole
+// A GIVEN, not a free choice: it is the laser stack, 9.0 + 1.5 + 13.0 mm of
+// stock. pivot_z is derived from it rather than the other way round.
+stop_top   = 23.5;
 
 // ---------------- Motion ----------------
 rest_gap  = 0;     // key RESTS on the stem; a gap is physically impossible
 // Chosen as the midpoint between the worst-case actuation depth (2.1) and the
 // worst-case bottom-out depth (3.3), so it has 0.6 mm of margin either way.
+// This is the press AT THE PLUNGER, which is what the switch sees.
 mx_press  = 2.7;
 
 // ---------------- Self-actuation figures ----------------
@@ -138,13 +174,44 @@ blk_travel   = mx_travel;
 // ---------------- Derived heights — DO NOT hardcode these anywhere ----
 mx_plate_z  = base_th + mx_riser_h;                 // 10.5 switch plate top
 stem_top_z  = mx_plate_z + mx_stem_h;               // 21.7 stem top at rest
-pivot_z     = base_th + hinge_h;                    // 26.2 hinge axis
+housing_top_z = mx_plate_z + mx_housing_h;          // 16.2 top of the housing
+shoulder_z  = stem_top_z - mx_cross_h;              // 17.9 base of the cross,
+                                                    //      i.e. what a keycap
+                                                    //      actually seats on
+plunger_arm = pivot_x - contact_x;                  // 92 mm
+
+// ---- Where the key really lands, and why the pivot sits where it does -----
+// The cap underside is a PLANE THROUGH THE PIVOT AXIS, so a point r from the
+// pivot drops r/plunger_arm as far as the plunger does. The stop that binds is
+// therefore the FORWARDMOST stop material — furthest from the pivot — not the
+// stop nearest the plunger, and not the plunger's own radius.
+//
+// Ignoring that is what cost 0.3 mm: with the pivot at 26.2 and the stop top
+// at 23.5 the plunger only travelled 2.40 mm before the cap grounded out, not
+// the 2.7 the parameters claimed, leaving 0.3 mm over worst-case actuation
+// instead of 0.6. So pivot_z is now solved FROM the stop rather than assumed.
+stop_r_lead = pivot_x - (contact_x - (stop_clear/2 + stop_width));   // 104.5
+pivot_z     = stop_top + mx_press * stop_r_lead / plunger_arm;       // 26.57
+hinge_h     = pivot_z - base_th;                    //      for the hinge posts
 under_rest  = pivot_z;                              //      cap underside
-throw       = rest_gap + mx_press;                  //  2.7 cap travel to stop
-stop_top    = pivot_z - throw;                      // 23.5 bottom stop height
-plunger_len = pivot_z - (stem_top_z + rest_gap);    //  4.5
-key_top_z   = pivot_z + cap_th;                     // 30.2 above the board
-black_top_z = key_top_z + black_rise;               // 40.2
+throw       = rest_gap + mx_press;                  //  2.7 travel AT the stem
+plunger_len = pivot_z - (stem_top_z + rest_gap);    //  4.87
+key_top_z   = pivot_z + cap_th;                     // 30.57 above the board
+black_top_z = key_top_z + black_rise;               // 40.57
+
+// ---- Black keycap: where the socket has to be ----------------------------
+// The socket mouth sits at the BASE of the cross (shoulder_z), not at the top
+// of the stem. Placing the post's bottom face at stem_top_z — which is what
+// this design did — leaves the whole 3.80 mm cross below the socket and the
+// cap grips nothing at all.
+blk_socket_z = shoulder_z;
+// The post's lower section has to be slim enough to follow the stem down into
+// the housing opening, exactly as a real keycap's does. If it is not, the cap
+// grounds on the housing after only shoulder_z - housing_top_z = 1.7 mm, which
+// is less than the 2.1 mm a worst-case switch needs to actuate.
+blk_boss_w   = 5.5;   // MEASURE mx_well_w before trusting this
+// ...and it must stay slim until it is clear of the housing at full travel.
+blk_step_z   = housing_top_z + blk_travel + 0.8;    // 20.6
 
 foot_h      = 12;    // standoff height under the board (wiring space)
 
@@ -160,7 +227,7 @@ travel_min   = mx_travel  - mx_travel_tol;    // 3.3 — earliest bottom-out
 actuate_max  = mx_actuate + mx_actuate_tol;   // 2.1 — latest actuation
 
 // ---------------- Lever arms and the self-actuation limit -------------
-plunger_arm  = pivot_x - contact_x;                 // 92 mm
+// (plunger_arm is defined with the derived heights — it is needed there.)
 static_gf    = key_mass_g * com_arm / plunger_arm;  // key weight felt at the stem
 max_key_g    = mx_preload_gf * plunger_arm / com_arm;  // heaviest safe key
 
@@ -191,3 +258,32 @@ if (static_gf >= mx_preload_gf)
 if (contact_x >= front_clear)
     echo("*** WARNING: contact_x is inside the BLACK KEY zone — the fingertip ",
          "will collide with a black key. Keep it below ", front_clear, " mm ***");
+
+// ---------------- Switch fit checks (datasheet-driven) ----------------
+echo(str("housing top ", housing_top_z, " | cross base ", shoulder_z,
+         " | stem top ", stem_top_z, " | black socket mouth ", blk_socket_z));
+echo(str("stop binds at r = ", stop_r_lead, " (plunger at ", plunger_arm,
+         ") -> plunger travels ", mx_press, " mm, as intended"));
+echo(str("stop gap ", stop_clear, " vs housing ", mx_housing_w, " x ",
+         mx_housing_d, " -> ", (stop_clear - mx_housing_w)/2,
+         " mm per side in the worst rotation (fits either way round)"));
+
+// The switch is lowered between the stops to reach the plate, so the gap has
+// to pass the WIDE axis. At 15.0 it did not, and the switch could only be
+// fitted one way round — with 0.55 mm per side on a printed part.
+if (stop_clear < mx_housing_w)
+    echo("*** WARNING: stop clearance ", stop_clear, " is under the ",
+         mx_housing_w, " mm housing, so the switch either will not fit at all ",
+         "or fits only in one rotation. Widen stop_clear. ***");
+// A keycap socket placed above the cross grips nothing.
+if (blk_socket_z + mx_cross_h > stem_top_z + 0.001)
+    echo("*** WARNING: the black keycap socket starts above the cross base (",
+         shoulder_z, ") — it would sit on the stem tip and pull straight off ***");
+// ...and the cap must clear the housing for its whole travel.
+if (blk_step_z - housing_top_z < blk_travel)
+    echo("*** WARNING: the black keycap's full-width section reaches the switch ",
+         "housing after only ", blk_step_z - housing_top_z, " mm — less than the ",
+         blk_travel, " mm of travel it needs ***");
+if (blk_boss_w >= mx_well_w)
+    echo("*** WARNING: black keycap boss ", blk_boss_w, " will not enter the ",
+         mx_well_w, " mm housing opening — the key will jam short of actuation ***");

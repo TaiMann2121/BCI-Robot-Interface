@@ -95,16 +95,23 @@ board_l      = key_len + margin_front + margin_rear;   // 174 mm
 
 // ---------------- Feature sizes ----------------
 sw_clear   = 17.0;        // clearance hole for the switch BODY below the plate
-// The stop rail hole must clear the MX TOP HOUSING, which is a 15.6 mm SQUARE.
-// It is square, not round: a round hole would have to be 22 mm across to pass
-// the housing's diagonal, which would leave the 30 mm rail far too thin.
-stop_clear = 17.0;        // square, clears the 15.6 mm housing + the plunger
+// stop_clear MOVED to piano_params.scad. The printed route's stop shoulders
+// need exactly the same number, and a second copy here is precisely how
+// pivot_z drifted between the two routes once before. The hole stays square,
+// not round: a round hole would have to be 22 mm across to pass the housing's
+// diagonal, which would leave the rail far too thin.
 bolt_d     = 3.4;         // M3 clearance
 
 // Stop rail runs ACROSS all keys at the contact point. The key cap lands on
 // its top face; the plunger passes through stop_clear to reach the stem.
-stop_x0    = contact_x - 15;
-stop_x1    = contact_x + 15;
+//
+// The rail is exactly as wide as the printed route's shoulders — the clearance
+// hole plus stop_width either side — so BOTH routes bind at the same radius
+// from the pivot (stop_r_lead) and give the same press. It used to run to
+// contact_x +/- 15, reaching 2.5 mm further forward than the printed shoulders
+// and grounding the key earlier still.
+stop_x0    = contact_x - (stop_clear/2 + stop_width);
+stop_x1    = contact_x + (stop_clear/2 + stop_width);
 
 hinge_post_len = 9;             // bracket length along x
 hinge_post_w   = 4;             // bracket thickness — must fit the 5 mm gap

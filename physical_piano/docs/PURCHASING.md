@@ -75,7 +75,7 @@ the no-solder screw-terminal option below is a durable middle ground.
 | 1 | Beginner soldering iron kit (iron, stand, solder, sucker, wick) | ~$20 | [Amazon — LCDalternatives kit](https://www.amazon.com/Beginner-Soldering-LCDalternatives-v3-solder/dp/B00SH2MOB6) |
 | 1 pack | K&S 3 mm brass rod, 3-pack (300 mm each) — hinge pin | ~$8 | [Amazon](https://www.amazon.com/Round-Brass-Rod-Diameter-Engineering/dp/B013Y2EACO) — the laser route uses one continuous ~570 mm pin, so butt two rods at a bracket |
 | 1 | M3 nut/bolt/washer assortment kit | ~$12 | [Amazon](https://www.amazon.com/Assortment-Stainless-Washers-Assorted-Machine/dp/B0BC24J6SS) |
-| 6 | M3 standoffs, 12 mm — **laser route only**; the printed route has feet built into every base cell | ~$9 | [Amazon](https://www.amazon.com/Hilitchi-Female-Standoff-Assortment-Motherboard/dp/B01LZ6PXCY) |
+| 6 | M3 standoffs, 12 mm — **laser route only**; the printed route has feet built into the base cells | ~$9 | [Amazon](https://www.amazon.com/Hilitchi-Female-Standoff-Assortment-Motherboard/dp/B01LZ6PXCY) |
 | 1 | Gorilla super glue (cyanoacrylate) | ~$7 | [Amazon](https://www.amazon.com/Gorilla-Super-Glue-Gram-Clear/dp/B00KPYB05A) — gluing black keys into locating grooves |
 
 **No-solder alternative** — skip the perfboard + soldering kit above and use
@@ -102,7 +102,7 @@ gives the real number):
 | White key lever | 11 | ~16 g | ~175 g |
 | Base cell | 11 | ~23 g | ~255 g |
 | Black key | 7 | ~9 g | ~65 g |
-| Integral feet | 11 pairs | ~0.9 g | ~10 g |
+| Integral feet | 6 pairs | ~0.9 g | ~6 g |
 | | | **Total** | **~502 g** |
 
 At PLA **$0.64/g** → **~$321**.

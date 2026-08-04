@@ -40,7 +40,13 @@ be printed as one piece. The CAD is already designed around this: the base is
 built from **tileable 50 mm cells**, so we print it in runs and join them.
 
 - 5 cells per tile = 250 mm → fits the 254 mm bed with 4 mm to spare.
-- 11 keys = **3 tiles** (5 + 5 + 1), joined with M3 hardware.
+- 11 keys = **3 tiles** (5 + 4 + 2 = cells 0-4, 5-8, 9-10), joined with M3
+  hardware. The split is **not** free: the black keys' switch sockets straddle
+  the white-key boundaries, so a seam must not land on one or the glue joint
+  would run through the 14 mm hole the MX clips grip. Black keys sit after
+  cells 0, 2, 3, 5, 6, 7 and 9, so only "after 4" and "after 8" are seam-safe,
+  and with a 5-cell tile limit that is the only 3-way split that works.
+  (5 + 5 + 1 put a seam after cell 9, which *is* a black-key boundary.)
 - Individual white keys (140 × 45 mm) and black keys (87 × 26 mm) fit easily and
   can be batched many-per-plate.
 
@@ -82,8 +88,8 @@ Go to **HH C124** and talk to Jen Hitchcock. Bring the CAD and these questions:
    **~1.5 mm stock** (the thickness MX switches clip into)? If 1.5 mm is too
    flimsy over that span, is a stepped two-layer plate (1.5 mm with 14 mm holes
    over a thicker backing with clearance holes) feasible?
-4. **Tile joining.** The base cells now carry alignment dowel half-holes on
-   every edge, so a tile seam closes onto a 3 mm rod rather than being butted
+4. **Tile joining.** The base cells carry alignment dowel half-holes at the
+   two tile seams, so a seam closes onto a 3 mm rod rather than being butted
    by eye. Worth asking whether they would also glue or pin the seam, since
    the 50 mm key pitch — what the arm is calibrated to — has to survive two
    joins on this route. **This is now the likely route**, so it deserves more
@@ -104,7 +110,8 @@ this stage and eleven reprints later.
 ### Phase 3 — Full run
 Once the prototype is signed off, submit:
 - 11 × white key lever
-- 3 × base tile (5 + 5 + 1 cells, with black-key grooves at the right indices)
+- 3 × base tile (5 + 4 + 2 cells, with black-key switch sockets at the right
+  boundaries)
   *— or the laser-cut plate stack, if consult question 3 is a yes*
 - 7 × black key
 
@@ -134,12 +141,17 @@ re-run the demo sequence.
 |------|------|--------|---------|----:|
 | Key lever (notched for the black keys) | `piano_keys.scad` | `"key"` | print, PLA ~20% infill | 11 |
 | Black key (switched keycap) | `piano_keys.scad` | `"black"` | print | 7 |
-| Base tile (5 cells) | `piano_base_printed.scad` | `"tile"` | print | 3 (5+5+1) |
+| Base tile | `piano_base_printed.scad` | `"tile"`, `tile_i` = 0/1/2 | print | 3 (5+4+2) |
 | Frame cheek | `piano_frame.scad` | `"cheek"` | print | 2 |
 | Frame front rail segment | `piano_frame.scad` | `"front_seg"` | print | 3 |
 | Frame back rail segment | `piano_frame.scad` | `"back_seg"` | print | 3 |
 | Hinge pin | — | — | buy 3 mm rod, cut | — |
 | Tile alignment dowels | — | — | same 3 mm rod, 4 short pieces | — |
+
+`mx_switch.scad` is **not a part**. It is a to-scale model of the Kailh switch
+plus fit checks that place it in the board, so switch clearances can be looked
+at instead of argued from numbers. Run its `"white"`, `"black"` and
+`"fit_slice"` modes after any change to the socket, stop or keycap geometry.
 
 Feet are printed into every base cell, so this route needs **no standoffs**.
 
