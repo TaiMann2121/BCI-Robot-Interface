@@ -69,8 +69,10 @@ Go to **HH C124** and talk to Jen Hitchcock. Bring the CAD and these questions:
    - hold all 11 switches at an exact **50 mm pitch with no tile seams** — the
      arm's calibration depends on that pitch, so this removes a real risk, not
      just a cost;
-   - likely fit the laser bed in one piece (545 mm) where the 254 mm print bed
-     cannot;
+   - likely fit the laser bed in one piece where the 254 mm print bed cannot —
+     but note the SHEET is **565 x 174 mm**, not 545. 545 is the keyboard width;
+     the cut part adds a 10 mm side margin so the outermost hinge brackets land
+     on material. Ask about 565, or a yes here becomes a no later;
    - reduce printed mass from ~502 g to ~275 g (**$321 → ~$176**). Note the
      saving is *modest*, not half: laser machine time is billed hourly and
      isn't quoted on the services page, so net saving is likely **$30–80**.
@@ -89,7 +91,7 @@ Go to **HH C124** and talk to Jen Hitchcock. Bring the CAD and these questions:
    drilled through under every switch, and there is one bracket per key
    boundary, which is 12.)
 
-   Specifics to confirm: **can the bed take 545 mm**, and can they supply
+   Specifics to confirm: **can the bed take 565 x 174 mm**, and can they supply
    **1.5 mm stock** (the thickness MX switches clip into — this one is
    mandatory, not a preference) plus 9.0 mm and 13.0 mm? If 1.5 mm is too
    flimsy over that span, is a stepped two-layer plate (1.5 mm with 14 mm holes
