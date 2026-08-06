@@ -73,7 +73,7 @@ module mx_switch(press = 0, rot = 0) {
 // ---------------------------------------------------------------------
 // Checks
 // ---------------------------------------------------------------------
-mode    = "black";
+mode    = "white";
 press   = 0;      // 0 = at rest. Try mx_press for a white key at its stop,
                   // or blk_travel for a black key bottomed out.
 sw_rot  = 0;
