@@ -57,10 +57,34 @@ built from **tileable 50 mm cells**, so we print it in runs and join them.
 ### Phase 1 — Consult (before printing anything)
 Go to **HH C124** and talk to Jen Hitchcock. Bring the CAD and these questions:
 
-1. **Tolerances for moving parts.** Our design has a pin hinge and a sliding
-   plunger with **0.4 mm** clearances. Is that achievable on the X1C in PLA, or
-   should we open it up? *(This is the single most important question — the
-   whole mechanism depends on the key pivoting freely without slop.)*
+1. **Tolerances for moving parts.** There are exactly two moving fits in this
+   design, and both are **0.4 mm** — which is also the X1C's stated *minimum
+   feature*, so we are sitting on the machine's limit with no margin:
+
+   - **Key side to hinge post, 0.4 mm gap.** The key pivots between two fixed
+     posts standing in the 5 mm inter-key gap. Too tight and it rubs or jams
+     through its swing; too loose and it wanders sideways on the pin.
+   - **Pin bore to rod, 3.4 mm bore on a 3 mm rod.** 0.2 mm all round. This is
+     the actual bearing — it is what lets the key rotate without slop.
+
+   Ask: is 0.4 mm realistic in PLA on the X1C, or should we open it up? If the
+   answer is open it up, that is a one-line change to `clr` / `pin_d` in
+   `piano_params.scad` and a re-export, not a redesign.
+
+   Worth asking in the same breath: the printed hinge post is a **2 mm thick
+   fin, 25 mm tall, with a 3.4 mm hole through it** — a 12:1 aspect ratio in
+   the thin direction. Will it print without warping or snapping? It is the
+   most fragile part of the printed route.
+
+   *(This is the most important question after the 1.5 mm stock one — the whole
+   mechanism depends on the key pivoting freely without slop.)*
+
+   > Earlier revisions of this list said "a pin hinge and a **sliding plunger**
+   > with 0.4 mm clearances". The plunger slides in nothing: it is a free
+   > standing 4 mm post that presses on the switch stem, with 6.5 mm of air
+   > either side of it. That wording dated from a design where it ran in a
+   > guide bore, and describing it that way at the consult would get advice
+   > about a part that does not exist.
 2. **PLA vs. ABS.** PLA is cheapest. The F170's **soluble support** could print
    the hinge better. Is ABS worth the 1.6× material cost here?
 3. **Laser-cut the switch plate instead of printing tiles.** ⭐ *Highest-value
